@@ -29,7 +29,7 @@ function CheckIcon({ muted = false }: { muted?: boolean }) {
       fill="none"
       className={`shrink-0 mt-0.5 ${muted ? "text-gray-400" : "text-emerald-500"}`}
     >
-      <circle cx="8" cy="8" r="7" fill="currentColor" fillOpacity={muted ? "0.12" : "0.12"} />
+      <circle cx="8" cy="8" r="7" fill="currentColor" fillOpacity="0.12" />
       <path
         d="M5 8l2 2 4-4"
         stroke="currentColor"
@@ -91,7 +91,7 @@ export function Pricing() {
           </div>
 
           {/* pro */}
-          <div className="relative flex flex-col rounded-2xl border-2 border-blue-600 bg-blue-600 p-8 shadow-xl shadow-blue-600/20">
+          <div className="relative flex flex-col rounded-2xl border-2 border-blue-600 bg-blue-600 p-8 shadow-xl shadow-blue-600/20 overflow-visible">
             {/* popular badge */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 border-2 border-white px-3 py-1 text-xs font-bold text-white shadow-sm">

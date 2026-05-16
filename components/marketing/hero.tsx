@@ -39,7 +39,7 @@ const KANBAN_COLUMNS = [
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-white pt-24 pb-16 md:pt-32 md:pb-24">
+    <section className="relative overflow-hidden bg-white pt-28 pb-16 md:pt-36 md:pb-24">
       {/* subtle grid background */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.03]"
@@ -50,7 +50,7 @@ export function Hero() {
         }}
       />
       {/* blue glow top-center */}
-      <div className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-blue-600/8 blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-3xl" style={{ background: "rgba(37,99,235,0.08)" }} />
 
       <div className="relative mx-auto max-w-6xl px-6">
         <div className="flex flex-col items-center text-center">
