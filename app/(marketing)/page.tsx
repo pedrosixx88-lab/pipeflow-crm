@@ -7,7 +7,7 @@ import Link from "next/link";
 
 function CtaBanner() {
   return (
-    <section className="bg-blue-600 py-16 md:py-20">
+    <section className="bg-blue-600 dark:bg-blue-700 py-16 md:py-20">
       <div className="mx-auto max-w-3xl px-6 text-center">
         <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
           Pronto para fechar mais negócios?
