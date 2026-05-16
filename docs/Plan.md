@@ -113,22 +113,22 @@ feat: app shell — sidebar, header, navigation layout, placeholder pages
 
 ### Entregas
 
-- [ ] `app/(auth)/login/page.tsx` — página completa:
+- [x] `app/(auth)/login/page.tsx` — página completa:
   - Formulário: e-mail + senha
   - Botão "Entrar"
   - Link "Criar conta"
   - Tratamento de erro (estado local)
   - Loading state no botão
-- [ ] `app/(auth)/register/page.tsx` — página completa:
+- [x] `app/(auth)/register/page.tsx` — página completa:
   - Formulário: nome + e-mail + senha + confirmar senha
   - Botão "Criar conta"
   - Link "Já tenho conta"
   - Validação com `react-hook-form` + `zod`
-- [ ] `app/(auth)/forgot-password/page.tsx`:
+- [x] `app/(auth)/forgot-password/page.tsx`:
   - Formulário de e-mail
   - Mensagem de confirmação pós-envio
-- [ ] Componente `components/shared/auth-card.tsx` (wrapper de layout das telas auth)
-- [ ] Logo e branding na tela de auth
+- [x] Componente `components/shared/auth-logo.tsx` (logo + branding reutilizável nas telas auth)
+- [x] Logo e branding na tela de auth
 
 **Commit final:**
 ```
@@ -561,10 +561,12 @@ feat: landing page — hero, features, pricing, navbar, footer, SEO meta tags
 
 ### Entregas
 
-- [ ] `app/(app)/onboarding/page.tsx` — stepper de 3 etapas:
-  - Step 1: Nome do workspace (com slug gerado automaticamente)
-  - Step 2: Convidar colaboradores (até 2 e-mails, opcional)
-  - Step 3: Criar primeiro lead (campos essenciais)
+- [x] `app/(onboarding)/onboarding/page.tsx` — Step 1 implementado (antecipado no M3):
+  - Step 1: Nome do workspace com validação zod ✓
+  - Step indicator visual de 3 etapas ✓
+  - Redireciona para `/dashboard` ao concluir (fake, sem Supabase) ✓
+- [ ] Step 2: Convidar colaboradores (até 2 e-mails, opcional)
+- [ ] Step 3: Criar primeiro lead (campos essenciais)
 - [ ] `components/onboarding/onboarding-stepper.tsx` — barra de progresso visual
 - [ ] Redirecionar para `/onboarding` após primeiro login (verificar se `profile.onboarded = false`)
 - [ ] Marcar `profile.onboarded = true` ao concluir
