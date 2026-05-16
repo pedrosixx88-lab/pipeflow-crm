@@ -4,11 +4,7 @@ import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import type { LeadStatus } from "@/types";
 import { STATUS_CONFIG } from "@/components/leads/status-badge";
@@ -23,24 +19,14 @@ interface LeadFiltersProps {
 }
 
 export function LeadFilters({
-  search,
-  onSearchChange,
-  statusFilter,
-  onStatusFilterChange,
-  totalCount,
-  filteredCount,
+  search, onSearchChange, statusFilter, onStatusFilterChange, totalCount, filteredCount,
 }: LeadFiltersProps) {
   const hasActiveFilters = search !== "" || statusFilter !== "all";
-
-  function clearFilters() {
-    onSearchChange("");
-    onStatusFilterChange("all");
-  }
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
         <Input
           placeholder="Buscar por nome ou empresa..."
           value={search}
@@ -50,10 +36,7 @@ export function LeadFilters({
       </div>
 
       <div className="flex items-center gap-2">
-        <Select
-          value={statusFilter}
-          onValueChange={(v) => onStatusFilterChange(v as LeadStatus | "all")}
-        >
+        <Select value={statusFilter} onValueChange={(v) => onStatusFilterChange(v as LeadStatus | "all")}>
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -68,7 +51,7 @@ export function LeadFilters({
         </Select>
 
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1.5 text-gray-500">
+          <Button variant="ghost" size="sm" onClick={() => { onSearchChange(""); onStatusFilterChange("all"); }} className="gap-1.5 text-muted-foreground">
             <X className="h-3.5 w-3.5" />
             Limpar
           </Button>
@@ -76,7 +59,7 @@ export function LeadFilters({
       </div>
 
       {hasActiveFilters && (
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-muted-foreground">
           {filteredCount} de {totalCount} leads
         </span>
       )}

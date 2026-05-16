@@ -321,7 +321,7 @@ export function Sidebar() {
   // selector (position:absolute) não pode ser clipado por overflow:hidden
   // em nenhum ancestral. O aside já é flex column via flex-col.
   return (
-    <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
+    <aside data-sidebar className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
       <SidebarContent />
     </aside>
   );
@@ -361,6 +361,7 @@ export function MobileSidebar({
           funcione corretamente. Sem flex, flex-1 no filho não tem efeito
           e o conteúdo não preenche o drawer corretamente. */}
       <div
+        data-sidebar
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200 ease-in-out lg:hidden",
           open ? "translate-x-0" : "-translate-x-full"
