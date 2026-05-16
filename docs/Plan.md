@@ -36,12 +36,12 @@
 
 ### Entregas
 
-- [ ] Criar projeto Next.js 14 com App Router e TypeScript strict
+- [x] Criar projeto Next.js 14 com App Router e TypeScript strict
   ```bash
   npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir=no --import-alias="@/*"
   ```
-- [ ] Instalar e configurar shadcn/ui (`npx shadcn@latest init`)
-- [ ] Instalar dependências do projeto:
+- [x] Instalar e configurar shadcn/ui (`npx shadcn@latest init`)
+- [x] Instalar dependências do projeto:
   ```
   @supabase/supabase-js @supabase/ssr
   @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
@@ -53,16 +53,16 @@
   date-fns
   lucide-react
   ```
-- [ ] Criar estrutura de pastas conforme `CLAUDE.md`
-- [ ] Criar `.env.local` com todas as variáveis mapeadas (valores vazios)
-- [ ] Criar `.env.example` para o repositório
-- [ ] Configurar `lib/utils.ts` com helper `cn()`
-- [ ] Configurar fonte Inter via `next/font/google` no root layout
-- [ ] Adicionar tokens de cor do PipeFlow no `tailwind.config.ts`
-- [ ] Criar `types/index.ts` com tipos de domínio base (`Lead`, `Deal`, `Activity`, `Workspace`, `Member`)
-- [ ] Criar `types/database.ts` placeholder (substituído pelo gerado do Supabase depois)
-- [ ] Configurar `.gitignore` (incluir `.env.local`)
-- [ ] `git init` + commit inicial
+- [x] Criar estrutura de pastas conforme `CLAUDE.md`
+- [x] Criar `.env.local` com todas as variáveis mapeadas (valores vazios)
+- [x] Criar `.env.example` para o repositório
+- [x] Configurar `lib/utils.ts` com helper `cn()`
+- [x] Configurar fonte Inter via `next/font/google` no root layout
+- [x] Adicionar tokens de cor do PipeFlow no `globals.css` (Tailwind v4)
+- [x] Criar `types/index.ts` com tipos de domínio base (`Lead`, `Deal`, `Activity`, `Workspace`, `Member`)
+- [x] Criar `types/database.ts` placeholder (substituído pelo gerado do Supabase depois)
+- [x] Configurar `.gitignore` (incluir `.env.local`)
+- [x] `git init` + commit inicial
 
 **Commit final:**
 ```
