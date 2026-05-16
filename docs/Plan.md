@@ -78,26 +78,26 @@ feat: project setup — Next.js 14, shadcn/ui, Tailwind, TypeScript strict, fold
 
 ### Entregas
 
-- [ ] Criar `app/(app)/layout.tsx` com sidebar + área de conteúdo
-- [ ] Criar `components/shared/sidebar.tsx`:
+- [x] Criar `app/(app)/layout.tsx` com sidebar + área de conteúdo
+- [x] Criar `components/shared/sidebar.tsx`:
   - Logo PipeFlow
   - Links: Dashboard, Leads, Pipeline, Configurações
   - Dropdown de workspace (estático por ora)
   - Avatar do usuário + logout
-- [ ] Criar `components/shared/header.tsx`:
+- [x] Criar `components/shared/header.tsx`:
   - Título da página atual
   - Busca global (input estático)
   - Botão de notificações (placeholder)
-- [ ] Criar páginas placeholder com título e descrição:
+- [x] Criar páginas placeholder com título e descrição:
   - `app/(app)/dashboard/page.tsx`
   - `app/(app)/leads/page.tsx`
   - `app/(app)/pipeline/page.tsx`
   - `app/(app)/settings/page.tsx`
-- [ ] Criar `app/(auth)/layout.tsx` (layout centralizado para auth)
-- [ ] Criar placeholder `app/(auth)/login/page.tsx`
-- [ ] Criar placeholder `app/(auth)/register/page.tsx`
-- [ ] Sidebar responsiva (colapsável em mobile com Sheet do shadcn)
-- [ ] Estado ativo do link de navegação com `usePathname`
+- [x] Criar `app/(auth)/layout.tsx` (layout centralizado para auth)
+- [x] Criar placeholder `app/(auth)/login/page.tsx`
+- [x] Criar placeholder `app/(auth)/register/page.tsx`
+- [x] Sidebar responsiva (colapsável em mobile com drawer customizado)
+- [x] Estado ativo do link de navegação com `usePathname`
 
 **Commit final:**
 ```
