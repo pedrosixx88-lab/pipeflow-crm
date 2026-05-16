@@ -519,34 +519,35 @@ feat: billing backend — Stripe checkout, webhooks, Edge Function, plan guards
 
 ---
 
-## M16 — Landing Page
+## M16 — Landing Page ✅
 
-**Branch:** `feat/landing`
+**Branch:** `feat/landing` → merged em `main`
 **Objetivo:** Página pública de apresentação do PipeFlow CRM, otimizada para conversão, com todas as seções e link para cadastro.
 
 ### Entregas
 
-- [ ] `app/(marketing)/layout.tsx` — layout com navbar e footer
-- [ ] `app/(marketing)/page.tsx` — landing page
-- [ ] `components/marketing/navbar.tsx`:
+- [x] `app/(marketing)/layout.tsx` — layout com navbar e footer
+- [x] `app/(marketing)/page.tsx` — landing page
+- [x] `components/marketing/navbar.tsx`:
   - Logo, links âncora (Funcionalidades, Preços), botões "Login" e "Começar grátis"
   - Sticky no scroll
-- [ ] `components/marketing/hero.tsx`:
+- [x] `components/marketing/hero.tsx`:
   - Headline + subtítulo
-  - CTA duplo: "Começar grátis" + "Ver demo"
-  - Screenshot/mockup do pipeline
-- [ ] `components/marketing/features.tsx`:
-  - Grid de 6 cards: Pipeline Kanban, Gestão de Leads, Dashboard, Multi-empresa, Atividades, Integrações
+  - CTA duplo: "Começar grátis" + "Ver funcionalidades"
+  - Mockup do pipeline em HTML/CSS
+- [x] `components/marketing/features.tsx`:
+  - Grid de 6 cards: Pipeline Kanban, Gestão de Leads, Dashboard, Multi-empresa, Atividades, Acesso em qualquer lugar
   - Ícone + título + descrição curta
-- [ ] `components/marketing/pricing.tsx`:
+- [x] `components/marketing/pricing.tsx`:
   - 2 cards: Free e Pro (R$49/mês)
   - Lista de features por plano
   - CTA "Começar grátis" e "Assinar Pro"
-  - Destaque no plano Pro
-- [ ] `components/marketing/footer.tsx`:
+  - Destaque no plano Pro com badge "Mais popular"
+- [x] `components/marketing/footer.tsx`:
   - Logo, links, copyright
-- [ ] Meta tags OG para compartilhamento social
-- [ ] `app/sitemap.ts` e `app/robots.ts`
+- [x] Meta tags OG para compartilhamento social
+- [x] `app/sitemap.ts` e `app/robots.ts`
+- [x] Dark mode com variantes `dark:` em todos os componentes
 
 **Commit final:**
 ```
