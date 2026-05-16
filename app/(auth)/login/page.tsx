@@ -51,7 +51,7 @@ export default function LoginPage() {
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
           {serverError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {serverError}
             </div>
           )}
@@ -67,7 +67,7 @@ export default function LoginPage() {
               {...register("email")}
             />
             {errors.email && (
-              <p className="text-xs text-red-500">{errors.email.message}</p>
+              <p className="text-xs text-destructive">{errors.email.message}</p>
             )}
           </div>
 
@@ -90,7 +90,7 @@ export default function LoginPage() {
               {...register("password")}
             />
             {errors.password && (
-              <p className="text-xs text-red-500">{errors.password.message}</p>
+              <p className="text-xs text-destructive">{errors.password.message}</p>
             )}
           </div>
 
