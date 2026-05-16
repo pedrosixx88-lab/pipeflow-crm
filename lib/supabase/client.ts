@@ -1,5 +1,9 @@
-// Browser Supabase client — configurado no M4 (Auth Backend)
-// import { createBrowserClient } from "@supabase/ssr";
-// import type { Database } from "@/types/database";
+import { createBrowserClient } from "@supabase/ssr";
+import type { Database } from "@/types/database";
 
-export {};
+export function createClient() {
+  return createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
