@@ -164,37 +164,38 @@ feat: auth backend — Supabase Auth, session management, route protection, prof
 
 ---
 
-## M5 — Leads — UI
+## M5 — Leads — UI ✅
 
-**Branch:** `feat/leads-ui`
+**Branch:** `feat/leads-ui` → merged em `main`
 **Objetivo:** Interface completa de gestão de leads com dados mockados — listagem, filtros, página de detalhe e formulário de criação/edição.
 
 ### Entregas
 
-- [ ] `app/(app)/leads/page.tsx` — listagem com:
+- [x] `app/(app)/leads/page.tsx` — listagem com:
   - Tabela de leads (nome, empresa, cargo, status, responsável, data)
-  - Barra de busca (input controlado)
-  - Filtros: status, responsável (dropdowns)
+  - Barra de busca (input controlado, filtra por nome e empresa)
+  - Filtros: status (dropdown) + quick-stats clicáveis por status
   - Botão "Novo Lead"
   - Estado vazio (empty state ilustrado)
   - Loading skeleton
-- [ ] `components/leads/lead-table.tsx` — tabela com shadcn `DataTable`
-- [ ] `components/leads/lead-filters.tsx` — filtros em linha
-- [ ] `components/leads/lead-form.tsx` — formulário modal (Sheet ou Dialog):
-  - Campos: nome*, e-mail*, telefone, empresa, cargo, status
-  - Validação com zod
-  - Modo criação e edição
-- [ ] `app/(app)/leads/[id]/page.tsx` — página de detalhe:
-  - Card de perfil do lead (todos os campos)
-  - Seção "Negócios vinculados" (placeholder)
-  - Seção "Atividades" (timeline placeholder)
-  - Botão "Editar" + "Arquivar"
-- [ ] Badge de status com cores (`components/leads/status-badge.tsx`)
-- [ ] Dados mock em `lib/mock-data.ts` para desenvolvimento
+- [x] `components/leads/lead-table.tsx` — tabela com linhas clicáveis e menu de ações
+- [x] `components/leads/lead-filters.tsx` — busca + filtro de status + botão limpar
+- [x] `components/leads/lead-form.tsx` — formulário Sheet:
+  - Campos: nome*, e-mail*, telefone, empresa, cargo, status, observações
+  - Validação com zod (mensagens em pt-BR)
+  - Modo criação, edição e exclusão (com confirmação)
+- [x] `app/(app)/leads/[id]/page.tsx` — página de detalhe:
+  - Card de perfil do lead (avatar com iniciais, todos os campos)
+  - Seção "Negócios vinculados" (placeholder M7)
+  - Timeline de atividades com ícone/cor por tipo e data relativa
+  - Botão "Editar" (abre form em modo edição) + "Arquivar"
+- [x] Badge de status com cores (`components/leads/status-badge.tsx`)
+- [x] 12 leads brasileiros + 10 atividades em `lib/mock-data.ts`
+- [x] `formatDate` e `formatRelativeDate` em `lib/utils.ts`
 
 **Commit final:**
 ```
-feat: leads UI — list, filters, detail page, create/edit form with mock data
+feat: leads UI — list, filters, detail page, create/edit/delete form with mock data
 ```
 
 ---
