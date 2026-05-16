@@ -6,18 +6,18 @@ import { Building2, Calendar, GripVertical, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Deal, Lead } from "@/types";
 
-const STAGE_ACCENT: Record<string, { bar: string; value: string; dot: string }> = {
-  novo_lead:         { bar: "bg-blue-500",   value: "text-blue-700",   dot: "bg-blue-400" },
-  contato_realizado: { bar: "bg-violet-500", value: "text-violet-700", dot: "bg-violet-400" },
-  proposta_enviada:  { bar: "bg-amber-500",  value: "text-amber-700",  dot: "bg-amber-400" },
-  negociacao:        { bar: "bg-orange-500", value: "text-orange-700", dot: "bg-orange-400" },
-  fechado_ganho:     { bar: "bg-emerald-500",value: "text-emerald-700",dot: "bg-emerald-400" },
-  fechado_perdido:   { bar: "bg-red-400",    value: "text-red-600",    dot: "bg-red-400" },
+const STAGE_ACCENT: Record<string, { bar: string; value: string }> = {
+  novo_lead:         { bar: "bg-blue-500",    value: "text-blue-400" },
+  contato_realizado: { bar: "bg-violet-500",  value: "text-violet-400" },
+  proposta_enviada:  { bar: "bg-amber-500",   value: "text-amber-400" },
+  negociacao:        { bar: "bg-orange-500",  value: "text-orange-400" },
+  fechado_ganho:     { bar: "bg-emerald-500", value: "text-emerald-400" },
+  fechado_perdido:   { bar: "bg-red-500",     value: "text-red-400" },
 };
 
 const AVATAR_COLORS = [
-  "bg-blue-500", "bg-violet-500", "bg-emerald-500",
-  "bg-amber-500", "bg-rose-500", "bg-cyan-500",
+  "bg-blue-600", "bg-violet-600", "bg-emerald-600",
+  "bg-amber-600", "bg-rose-600", "bg-cyan-600",
 ];
 
 function getAvatarColor(name: string): string {
@@ -32,9 +32,9 @@ function getInitials(name: string): string {
 
 function formatCurrency(value: number): string {
   if (value >= 1_000_000)
-    return `R$ ${(value / 1_000_000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M`;
+    return `R$ ${(value / 1_000_000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M`;
   if (value >= 1_000)
-    return `R$ ${(value / 1_000).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 1 })}k`;
+    return `R$ ${(value / 1_000).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 1 })}k`;
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
@@ -76,13 +76,14 @@ export function DealCard({ deal, lead, onEdit, isDragging = false, isOverlay = f
       ref={isOverlay ? undefined : setNodeRef}
       style={isOverlay ? undefined : style}
       className={cn(
-        "group relative flex cursor-pointer select-none flex-col gap-0 rounded-xl border border-gray-200/80 bg-white",
-        "shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]",
+        "group relative flex cursor-pointer select-none flex-col gap-0 rounded-xl",
+        "border border-white/[0.07] bg-card",
+        "shadow-[0_1px_3px_rgba(0,0,0,0.3),0_1px_2px_rgba(0,0,0,0.2)]",
         "transition-all duration-150 ease-out",
-        "hover:border-gray-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08),0_2px_4px_rgba(0,0,0,0.06)]",
+        "hover:border-white/[0.14] hover:shadow-[0_4px_16px_rgba(0,0,0,0.4)]",
         "hover:-translate-y-[2px]",
-        isGhost && "opacity-30 scale-95",
-        isOverlay && "rotate-[1.5deg] scale-[1.02] shadow-[0_16px_40px_rgba(0,0,0,0.18)] opacity-100 border-gray-300"
+        isGhost && "opacity-25 scale-95",
+        isOverlay && "rotate-[1.5deg] scale-[1.02] shadow-[0_20px_50px_rgba(0,0,0,0.6)] opacity-100"
       )}
       onClick={() => !isGhost && onEdit(deal)}
     >
@@ -96,11 +97,11 @@ export function DealCard({ deal, lead, onEdit, isDragging = false, isOverlay = f
             {...(isOverlay ? {} : attributes)}
             {...(isOverlay ? {} : listeners)}
             onClick={(e) => e.stopPropagation()}
-            className="mt-0.5 flex-shrink-0 cursor-grab text-gray-300 transition-colors group-hover:text-gray-400 active:cursor-grabbing"
+            className="mt-0.5 flex-shrink-0 cursor-grab text-white/20 transition-colors group-hover:text-white/40 active:cursor-grabbing"
           >
             <GripVertical className="h-3.5 w-3.5" />
           </div>
-          <p className="flex-1 text-[13px] font-semibold leading-snug text-gray-900 line-clamp-2">
+          <p className="flex-1 text-[13px] font-semibold leading-snug text-card-foreground line-clamp-2">
             {deal.title}
           </p>
         </div>
@@ -116,39 +117,35 @@ export function DealCard({ deal, lead, onEdit, isDragging = false, isOverlay = f
         {/* Lead / Company */}
         {lead && (
           <div className="flex items-center gap-1.5 pl-5">
-            <Building2 className="h-3 w-3 flex-shrink-0 text-gray-400" />
-            <p className="truncate text-[11px] text-gray-500 leading-none">
-              <span className="font-medium text-gray-700">{lead.name}</span>
-              {lead.company && <span className="text-gray-400"> · {lead.company}</span>}
+            <Building2 className="h-3 w-3 flex-shrink-0 text-muted-foreground/60" />
+            <p className="truncate text-[11px] leading-none">
+              <span className="font-medium text-muted-foreground">{lead.name}</span>
+              {lead.company && <span className="text-muted-foreground/50"> · {lead.company}</span>}
             </p>
           </div>
         )}
 
         {/* Footer: avatar + deadline */}
         <div className="flex items-center justify-between pl-5">
-          {/* Owner avatar */}
-          <div className="flex items-center gap-1.5">
-            <div
-              className={cn(
-                "flex h-[22px] w-[22px] items-center justify-center rounded-full text-[9px] font-bold text-white ring-2 ring-white",
-                getAvatarColor(OWNER_NAME)
-              )}
-              title={OWNER_NAME}
-            >
-              {getInitials(OWNER_NAME)}
-            </div>
+          <div
+            className={cn(
+              "flex h-[22px] w-[22px] items-center justify-center rounded-full text-[9px] font-bold text-white ring-2 ring-card",
+              getAvatarColor(OWNER_NAME)
+            )}
+            title={OWNER_NAME}
+          >
+            {getInitials(OWNER_NAME)}
           </div>
 
-          {/* Deadline */}
           {deadlineInfo && (
             <span
               className={cn(
                 "flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide",
                 deadlineInfo.overdue
-                  ? "bg-red-100 text-red-700"
+                  ? "bg-red-500/20 text-red-400"
                   : deadlineInfo.urgent
-                  ? "bg-amber-100 text-amber-700"
-                  : "bg-gray-100 text-gray-500"
+                  ? "bg-amber-500/20 text-amber-400"
+                  : "bg-white/[0.06] text-muted-foreground"
               )}
             >
               <Calendar className="h-2.5 w-2.5" />

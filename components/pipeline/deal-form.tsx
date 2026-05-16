@@ -84,40 +84,17 @@ export function DealForm({
     formState: { errors },
   } = useForm<DealFormData>({
     resolver: zodResolver(dealSchema),
-    defaultValues: {
-      title: "",
-      value: undefined,
-      leadId: "",
-      stage: defaultStage,
-      deadline: "",
-    },
+    defaultValues: { title: "", value: undefined, leadId: "", stage: defaultStage, deadline: "" },
   });
 
   useEffect(() => {
     if (open) {
-      if (deal) {
-        reset({
-          title: deal.title,
-          value: deal.value,
-          leadId: deal.leadId,
-          stage: deal.stage,
-          deadline: deal.deadline ?? "",
-        });
-      } else {
-        reset({
-          title: "",
-          value: undefined,
-          leadId: "",
-          stage: defaultStage,
-          deadline: "",
-        });
-      }
+      reset(deal
+        ? { title: deal.title, value: deal.value, leadId: deal.leadId, stage: deal.stage, deadline: deal.deadline ?? "" }
+        : { title: "", value: undefined, leadId: "", stage: defaultStage, deadline: "" }
+      );
     }
   }, [open, deal, defaultStage, reset]);
-
-  function handleFormSubmit(data: DealFormData) {
-    onSubmit(data);
-  }
 
   function handleDelete() {
     if (deal && onDelete) {
@@ -130,42 +107,37 @@ export function DealForm({
     <>
       <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
         <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-[480px]">
-          <SheetHeader className="border-b border-gray-200 px-6 py-5">
-            <SheetTitle className="text-base font-semibold text-gray-900">
+          <SheetHeader className="border-b border-border px-6 py-5">
+            <SheetTitle className="text-base font-semibold text-foreground">
               {isEditing ? "Editar Negócio" : "Novo Negócio"}
             </SheetTitle>
-            <SheetDescription className="text-sm text-gray-500">
+            <SheetDescription className="text-sm text-muted-foreground">
               {isEditing
                 ? "Atualize as informações do negócio."
                 : "Preencha os dados para criar um novo negócio no pipeline."}
             </SheetDescription>
           </SheetHeader>
 
-          <form
-            onSubmit={handleSubmit(handleFormSubmit)}
-            className="flex flex-1 flex-col overflow-hidden"
-          >
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-1 flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto px-6 py-5">
               <div className="flex flex-col gap-5">
                 {/* Título */}
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="deal-title">
-                    Título <span className="text-red-500">*</span>
+                    Título <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="deal-title"
                     placeholder="Ex: Implementação CRM Enterprise"
                     {...register("title")}
                   />
-                  {errors.title && (
-                    <p className="text-xs text-red-500">{errors.title.message}</p>
-                  )}
+                  {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
                 </div>
 
                 {/* Valor */}
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="deal-value">
-                    Valor (R$) <span className="text-red-500">*</span>
+                    Valor (R$) <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="deal-value"
@@ -175,15 +147,13 @@ export function DealForm({
                     placeholder="Ex: 48000"
                     {...register("value", { valueAsNumber: true })}
                   />
-                  {errors.value && (
-                    <p className="text-xs text-red-500">{errors.value.message}</p>
-                  )}
+                  {errors.value && <p className="text-xs text-destructive">{errors.value.message}</p>}
                 </div>
 
                 {/* Lead */}
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="deal-lead">
-                    Lead <span className="text-red-500">*</span>
+                    Lead <span className="text-destructive">*</span>
                   </Label>
                   <Controller
                     name="leadId"
@@ -198,9 +168,7 @@ export function DealForm({
                             <SelectItem key={lead.id} value={lead.id}>
                               {lead.name}
                               {lead.company && (
-                                <span className="ml-1 text-gray-400">
-                                  — {lead.company}
-                                </span>
+                                <span className="ml-1 text-muted-foreground"> — {lead.company}</span>
                               )}
                             </SelectItem>
                           ))}
@@ -208,16 +176,14 @@ export function DealForm({
                       </Select>
                     )}
                   />
-                  {errors.leadId && (
-                    <p className="text-xs text-red-500">{errors.leadId.message}</p>
-                  )}
+                  {errors.leadId && <p className="text-xs text-destructive">{errors.leadId.message}</p>}
                 </div>
 
-                {/* Etapa e Prazo */}
+                {/* Etapa + Prazo */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="deal-stage">
-                      Etapa <span className="text-red-500">*</span>
+                      Etapa <span className="text-destructive">*</span>
                     </Label>
                     <Controller
                       name="stage"
@@ -237,57 +203,37 @@ export function DealForm({
                         </Select>
                       )}
                     />
-                    {errors.stage && (
-                      <p className="text-xs text-red-500">{errors.stage.message}</p>
-                    )}
+                    {errors.stage && <p className="text-xs text-destructive">{errors.stage.message}</p>}
                   </div>
 
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="deal-deadline">Prazo</Label>
-                    <Input
-                      id="deal-deadline"
-                      type="date"
-                      {...register("deadline")}
-                    />
+                    <Input id="deal-deadline" type="date" {...register("deadline")} />
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between border-t border-border px-6 py-4">
               {isEditing && onDelete ? (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"
+                  className="gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => setShowDeleteDialog(true)}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   Excluir
                 </Button>
-              ) : (
-                <div />
-              )}
+              ) : <div />}
               <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={onClose}
-                >
+                <Button type="button" variant="outline" size="sm" onClick={onClose}>
                   Cancelar
                 </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={isSubmitting}
-                  className="gap-2"
-                >
-                  {isSubmitting && (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  )}
+                <Button type="submit" size="sm" disabled={isSubmitting} className="gap-2">
+                  {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   {isEditing ? "Salvar" : "Criar negócio"}
                 </Button>
               </div>
@@ -296,26 +242,17 @@ export function DealForm({
         </SheetContent>
       </Sheet>
 
-      {/* Delete confirmation */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Excluir negócio</DialogTitle>
             <DialogDescription>
-              Tem certeza que deseja excluir{" "}
-              <strong>{deal?.title}</strong>? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir <strong>{deal?.title}</strong>? Esta ação não pode ser desfeita.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-            >
-              Cancelar
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Excluir
-            </Button>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleDelete}>Excluir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -9,6 +9,7 @@ import type { DealFormData } from "@/components/pipeline/deal-form";
 import { DealDetailSheet } from "@/components/pipeline/deal-detail-sheet";
 import { MOCK_DEALS, MOCK_LEADS } from "@/lib/mock-data";
 import type { Deal, DealStage, Lead } from "@/types";
+import { cn } from "@/lib/utils";
 
 function formatCurrency(value: number): string {
   if (value >= 1_000_000)
@@ -16,6 +17,45 @@ function formatCurrency(value: number): string {
   if (value >= 1_000)
     return `R$ ${(value / 1_000).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 1 })}k`;
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+interface StatCardProps {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  accent?: boolean;
+}
+
+function StatCard({ icon: Icon, label, value, accent }: StatCardProps) {
+  return (
+    <div className={cn(
+      "flex items-center gap-3 rounded-xl border px-4 py-3",
+      accent
+        ? "border-emerald-500/20 bg-emerald-500/[0.08]"
+        : "border-white/[0.07] bg-card shadow-[0_1px_3px_rgba(0,0,0,0.3)]"
+    )}>
+      <div className={cn(
+        "flex h-8 w-8 items-center justify-center rounded-lg",
+        accent ? "bg-emerald-500/15" : "bg-white/[0.06]"
+      )}>
+        <Icon className={cn("h-4 w-4", accent ? "text-emerald-400" : "text-muted-foreground")} />
+      </div>
+      <div>
+        <p className={cn(
+          "text-[10px] font-semibold uppercase tracking-wide",
+          accent ? "text-emerald-500/80" : "text-muted-foreground/60"
+        )}>
+          {label}
+        </p>
+        <p className={cn(
+          "text-sm font-bold tabular-nums",
+          accent ? "text-emerald-400" : "text-card-foreground"
+        )}>
+          {value}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export default function PipelinePage() {
@@ -50,6 +90,12 @@ export default function PipelinePage() {
   function openDetail(deal: Deal) {
     setViewingDeal(deal);
     setDetailSheetOpen(true);
+  }
+
+  function handleDetailEdit(deal: Deal) {
+    setDetailSheetOpen(false);
+    setViewingDeal(null);
+    openEdit(deal);
   }
 
   function handleSubmit(data: DealFormData) {
@@ -98,57 +144,28 @@ export default function PipelinePage() {
 
   return (
     <div className="flex h-full flex-col gap-5">
-      {/* Page header */}
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Pipeline</h1>
-            <p className="mt-0.5 text-sm text-gray-500">Acompanhe seus negócios em andamento</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Pipeline</h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">Acompanhe seus negócios em andamento</p>
           </div>
-
-          {/* Quick stats */}
-          <div className="flex flex-wrap gap-3">
-            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50">
-                <BarChart3 className="h-3.5 w-3.5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Negócios ativos</p>
-                <p className="text-sm font-bold tabular-nums text-gray-900">{activeDeals.length}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50">
-                <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Valor em aberto</p>
-                <p className="text-sm font-bold tabular-nums text-gray-900">{formatCurrency(totalPipeline)}</p>
-              </div>
-            </div>
-
+          <div className="flex flex-wrap gap-2">
+            <StatCard icon={BarChart3} label="Negócios ativos" value={String(activeDeals.length)} />
+            <StatCard icon={TrendingUp} label="Valor em aberto" value={formatCurrency(totalPipeline)} />
             {wonDeals.length > 0 && (
-              <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 shadow-sm">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100">
-                  <Trophy className="h-3.5 w-3.5 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wide text-emerald-600">Ganhos</p>
-                  <p className="text-sm font-bold tabular-nums text-emerald-700">{formatCurrency(wonValue)}</p>
-                </div>
-              </div>
+              <StatCard icon={Trophy} label="Ganhos" value={formatCurrency(wonValue)} accent />
             )}
           </div>
         </div>
-
         <Button onClick={() => openCreate("novo_lead")} className="gap-2 self-start">
           <Plus className="h-4 w-4" />
           Novo Negócio
         </Button>
       </div>
 
-      {/* Board — negative margin to allow full-bleed horizontal scroll */}
+      {/* Board */}
       <div className="-mx-6 flex-1 overflow-x-auto px-6 pb-4">
         <PipelineBoard
           deals={deals}
@@ -178,10 +195,4 @@ export default function PipelinePage() {
       />
     </div>
   );
-
-  function handleDetailEdit(deal: Deal) {
-    setDetailSheetOpen(false);
-    setViewingDeal(null);
-    openEdit(deal);
-  }
 }
