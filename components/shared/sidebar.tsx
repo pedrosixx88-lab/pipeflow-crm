@@ -18,7 +18,6 @@ import {
 
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import {
@@ -97,6 +96,8 @@ function WorkspaceSelector() {
   const initials = active.name.slice(0, 2).toUpperCase();
 
   return (
+    // Bug 2 fix: sem overflow-hidden no wrapper — o dropdown position:absolute
+    // fica dentro deste div.relative e não pode ser clipado por ele.
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
@@ -111,10 +112,13 @@ function WorkspaceSelector() {
           </p>
         </div>
         <div className="flex items-center gap-1.5">
+          {/* Bug 4 fix: span simples em vez de Badge do Base UI.
+              O Badge tem rounded-4xl na base que twMerge não reconhece
+              como conflito com rounded, resultando em forma pill. */}
           {active.plan === "pro" && (
-            <Badge className="h-4 rounded px-1 text-[9px] bg-blue-600/20 text-blue-400 border-none hover:bg-blue-600/20">
+            <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold bg-blue-500/15 text-blue-400">
               Pro
-            </Badge>
+            </span>
           )}
           <ChevronDown
             className={cn(
@@ -126,7 +130,7 @@ function WorkspaceSelector() {
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-popover p-1 shadow-xl shadow-black/30">
+        <div className="absolute left-0 right-0 top-full z-[100] mt-1 rounded-lg border border-border bg-popover p-1 shadow-xl shadow-black/30">
           <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
             Workspaces
           </p>
@@ -143,11 +147,13 @@ function WorkspaceSelector() {
                 {ws.name.slice(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-foreground">{ws.name}</p>
+                <p className="truncate font-medium text-foreground">
+                  {ws.name}
+                </p>
               </div>
               <div className="flex items-center gap-1.5">
                 {ws.plan === "pro" && (
-                  <span className="rounded px-1 py-0.5 text-[9px] font-medium bg-blue-600/20 text-blue-400">
+                  <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold bg-blue-500/15 text-blue-400">
                     Pro
                   </span>
                 )}
@@ -194,7 +200,7 @@ function NavLink({
       )}
     >
       {isActive && (
-        <span className="absolute left-0 inset-y-1.5 w-0.5 rounded-r-full bg-blue-500" />
+        <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-r-full bg-blue-500" />
       )}
       <Icon
         className={cn(
@@ -214,8 +220,12 @@ interface SidebarContentProps {
 }
 
 function SidebarContent({ onNavClick }: SidebarContentProps) {
+  // Bug 1 fix: flex-1 + min-h-0 em vez de h-full.
+  // h-full só funciona se o pai tiver altura explícita definida,
+  // o que não é garantido quando o pai é um flex-child sem h-full próprio.
+  // flex-1 + min-h-0 funciona corretamente em qualquer contexto flex.
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className="flex flex-1 flex-col min-h-0">
       {/* Logo */}
       <div className="flex h-14 shrink-0 items-center px-4">
         <PipeFlowLogo />
@@ -234,13 +244,15 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
       <Separator className="opacity-40" />
 
       {/* Nav */}
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-3">
+      <nav className="flex-1 overflow-y-auto px-3 py-3">
         <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
           Menu
         </p>
-        {NAV_ITEMS.map((item) => (
-          <NavLink key={item.href} {...item} onClick={onNavClick} />
-        ))}
+        <div className="space-y-0.5">
+          {NAV_ITEMS.map((item) => (
+            <NavLink key={item.href} {...item} onClick={onNavClick} />
+          ))}
+        </div>
       </nav>
 
       <Separator className="opacity-40" />
@@ -305,6 +317,9 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
 }
 
 export function Sidebar() {
+  // Bug 2 fix: sem overflow-hidden no wrapper — o dropdown do workspace
+  // selector (position:absolute) não pode ser clipado por overflow:hidden
+  // em nenhum ancestral. O aside já é flex column via flex-col.
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
       <SidebarContent />
@@ -342,16 +357,18 @@ export function MobileSidebar({
         aria-hidden="true"
       />
 
-      {/* Drawer */}
+      {/* Bug 3 fix: flex flex-col no drawer para que SidebarContent (flex-1)
+          funcione corretamente. Sem flex, flex-1 no filho não tem efeito
+          e o conteúdo não preenche o drawer corretamente. */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-60 border-r border-sidebar-border bg-sidebar transition-transform duration-200 ease-in-out lg:hidden",
+          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200 ease-in-out lg:hidden",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <button
           onClick={onClose}
-          className="absolute right-3 top-4 rounded-md p-1 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+          className="absolute right-3 top-4 z-10 rounded-md p-1 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
           aria-label="Fechar menu"
         >
           <X className="size-4" />
