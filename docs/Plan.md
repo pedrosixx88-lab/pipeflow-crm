@@ -358,26 +358,26 @@ feat: activities backend — activities table, RLS, CRUD server actions
 
 ---
 
-## M11 — Dashboard — UI
+## M11 — Dashboard — UI ✅
 
-**Branch:** `feat/dashboard-ui`
+**Branch:** `feat/dashboard-ui` → merged em `main`
 **Objetivo:** Dashboard com KPIs visuais e gráfico de funil — dados mockados mas completamente estilizados e responsivos.
 
 ### Entregas
 
-- [ ] `app/(app)/dashboard/page.tsx` — layout completo
-- [ ] `components/dashboard/kpi-card.tsx` — card reutilizável:
+- [x] `app/(app)/dashboard/page.tsx` — layout completo
+- [x] `components/dashboard/kpi-card.tsx` — card reutilizável:
   - Ícone, título, valor principal, variação percentual
   - 4 instâncias: Total Leads, Negócios Abertos, Valor do Pipeline, Taxa de Conversão
-- [ ] `components/dashboard/funnel-chart.tsx` — gráfico Recharts:
-  - `FunnelChart` ou `BarChart` horizontal por etapa
+- [x] `components/dashboard/funnel-chart.tsx` — gráfico Recharts:
+  - `BarChart` horizontal por etapa
   - Cores das etapas definidas no `CLAUDE.md`
   - Tooltip com valor e count
-- [ ] `components/dashboard/upcoming-deals.tsx` — lista de negócios com prazo próximo:
+- [x] `components/dashboard/upcoming-deals.tsx` — lista de negócios com prazo próximo:
   - Top 5, ordenado por prazo
   - Badge de urgência (< 3 dias = vermelho, < 7 dias = amarelo)
-- [ ] Grid responsivo: 2 cols em tablet, 4 em desktop
-- [ ] Dados mock em `lib/mock-data.ts`
+- [x] Grid responsivo: 2 cols em tablet, 4 em desktop
+- [x] Dados mock em `lib/mock-data.ts`
 
 **Commit final:**
 ```
