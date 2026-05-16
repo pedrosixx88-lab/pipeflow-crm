@@ -1,80 +1,121 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AuthLogo } from "@/components/shared/auth-logo";
+
+const loginSchema = z.object({
+  email: z.string().min(1, "E-mail obrigatório").email("E-mail inválido"),
+  password: z.string().min(1, "Senha obrigatória"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  async function onSubmit(_data: LoginFormData) {
+    setServerError(null);
+    // Simula latência de rede
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    // Navegação fake — será substituída pelo Supabase Auth no M4
+    router.push("/dashboard");
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      {/* Logo */}
-      <div className="flex flex-col items-center gap-2 text-center">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-blue-600 shadow-lg shadow-blue-600/20">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 15 15"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <rect x="1" y="1" width="5" height="5" rx="1" fill="white" fillOpacity="0.95" />
-            <rect x="9" y="1" width="5" height="5" rx="1" fill="white" fillOpacity="0.4" />
-            <rect x="1" y="9" width="5" height="5" rx="1" fill="white" fillOpacity="0.4" />
-            <rect x="9" y="9" width="5" height="5" rx="1" fill="white" fillOpacity="0.95" />
-            <path
-              d="M6 3.5H7.5C8.05 3.5 8.5 3.95 8.5 4.5V10.5C8.5 11.05 8.95 11.5 9.5 11.5H9"
-              stroke="white"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-          </svg>
-        </div>
-        <h1 className="text-xl font-bold tracking-tight text-foreground">
-          Entrar no PipeFlow
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Bem-vindo de volta. Faça login na sua conta.
-        </p>
+      <AuthLogo />
+
+      <div className="flex flex-col items-center gap-1 text-center">
+        <h1 className="text-xl font-bold tracking-tight text-foreground">Entrar no PipeFlow</h1>
+        <p className="text-sm text-muted-foreground">Bem-vindo de volta.</p>
       </div>
 
-      {/* Form placeholder */}
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+          {serverError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+              {serverError}
+            </div>
+          )}
+
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-foreground">E-mail</label>
-            <input
+            <Label htmlFor="email">E-mail</Label>
+            <Input
+              id="email"
               type="email"
               placeholder="seu@email.com"
-              className="h-9 rounded-lg border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+              autoComplete="email"
+              aria-invalid={!!errors.email}
+              {...register("email")}
             />
+            {errors.email && (
+              <p className="text-xs text-red-500">{errors.email.message}</p>
+            )}
           </div>
+
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-foreground">Senha</label>
+              <Label htmlFor="password">Senha</Label>
               <Link
                 href="/forgot-password"
-                className="text-xs text-blue-400 transition-colors hover:text-blue-300"
+                className="text-xs text-blue-600 transition-colors hover:text-blue-700"
               >
                 Esqueceu a senha?
               </Link>
             </div>
-            <input
+            <Input
+              id="password"
               type="password"
               placeholder="••••••••"
-              className="h-9 rounded-lg border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+              autoComplete="current-password"
+              aria-invalid={!!errors.password}
+              {...register("password")}
             />
+            {errors.password && (
+              <p className="text-xs text-red-500">{errors.password.message}</p>
+            )}
           </div>
-          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-            Entrar
+
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Entrando...
+              </>
+            ) : (
+              "Entrar"
+            )}
           </Button>
-        </div>
+        </form>
       </div>
 
       <p className="text-center text-sm text-muted-foreground">
         Não tem conta?{" "}
         <Link
           href="/register"
-          className="font-medium text-blue-400 transition-colors hover:text-blue-300"
+          className="font-medium text-blue-600 transition-colors hover:text-blue-700"
         >
           Criar conta grátis
         </Link>
