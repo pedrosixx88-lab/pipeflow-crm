@@ -637,3 +637,5 @@ feat: production deploy — error handling, performance, security hardening, Ver
 4. **Commits semânticos** — prefixo `feat:`, `fix:`, `chore:`, `docs:`
 5. **Tipos primeiro** — atualizar `types/index.ts` antes de implementar qualquer feature nova
 6. **RLS sempre** — toda nova tabela precisa de políticas RLS antes de qualquer query do frontend
+7. **Merge obrigatório antes de nova branch** — ao concluir qualquer milestone, SEMPRE fazer `git merge --no-ff` no `main` e `git push origin main` ANTES de criar a próxima branch. Nunca criar branch nova com milestone anterior pendente de merge.
+8. **Verificar main no início de cada sessão** — rodar `git log --oneline -5 main` e `git branch -a` para confirmar que o `main` contém todos os milestones concluídos antes de iniciar qualquer trabalho novo.

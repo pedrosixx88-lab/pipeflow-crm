@@ -200,3 +200,5 @@ NEXT_PUBLIC_APP_URL=             # URL base (ex: https://pipeflow.app)
 10. **Polimento & Deploy** — Testes, performance, deploy Vercel + Supabase prod
 
 > Sempre testar cada milestone antes de avançar para o próximo.
+
+> **REGRA CRÍTICA DE GIT:** Ao concluir qualquer milestone, SEMPRE fazer merge no `main` e push para `origin/main` ANTES de criar a próxima branch. No início de cada sessão, verificar com `git log --oneline -5 main` e `git branch -a` que o `main` está atualizado com tudo que foi concluído.
