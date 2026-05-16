@@ -232,32 +232,36 @@ feat: leads backend — Supabase CRUD, RLS, search, filters, plan limit guard
 
 ---
 
-## M7 — Pipeline — UI
+## M7 — Pipeline — UI ✅
 
-**Branch:** `feat/pipeline-ui`
+**Branch:** `feat/pipeline-ui` → merged em `main`
 **Objetivo:** Board Kanban completo e interativo com drag-and-drop, cards de negócios e estado visual por etapa — ainda com dados mockados.
 
 ### Entregas
 
-- [ ] `app/(app)/pipeline/page.tsx` — board Kanban
-- [ ] `components/pipeline/pipeline-board.tsx` — container DnD com `@dnd-kit`
-- [ ] `components/pipeline/pipeline-column.tsx` — coluna por etapa:
+- [x] `app/(app)/pipeline/page.tsx` — board Kanban com header de stats (negócios ativos, valor em aberto, ganhos)
+- [x] `components/pipeline/pipeline-board.tsx` — container DnD com `@dnd-kit` (MouseSensor + TouchSensor, closestCorners)
+- [x] `components/pipeline/pipeline-column.tsx` — coluna por etapa:
   - Header com nome, count e valor total (R$)
-  - Área droppable
+  - Área droppable com highlight ao arrastar
   - Scroll vertical interno
-- [ ] `components/pipeline/deal-card.tsx` — card de negócio:
+- [x] `components/pipeline/deal-card.tsx` — card de negócio:
   - Título do negócio
-  - Valor estimado (R$)
-  - Nome do lead vinculado
-  - Avatar do responsável
-  - Data prazo com cor de warning se próxima
-  - Draggable handle
-- [ ] 6 colunas com cores definidas no `CLAUDE.md`
-- [ ] Drag-and-drop entre colunas (sem persistência ainda)
-- [ ] Modal de criação de negócio (`components/pipeline/deal-form.tsx`):
-  - Título, valor, lead (select), responsável, prazo, etapa inicial
-- [ ] Clique no card abre detalhe em Sheet lateral
-- [ ] Botão "Novo Negócio" por coluna e global
+  - Valor estimado (R$) com ícone por etapa
+  - Nome do lead vinculado + empresa
+  - Avatar do responsável com iniciais
+  - Data prazo com cor de warning (≤7 dias âmbar, ≤3 dias / vencido vermelho)
+  - Grip handle draggável
+- [x] 6 colunas com cores definidas no `CLAUDE.md`
+- [x] Drag-and-drop entre colunas — totais atualizam em tempo real (sem persistência ainda)
+- [x] `components/pipeline/deal-form.tsx` — Sheet de criação/edição:
+  - Título, valor, lead (select), etapa, prazo
+  - Validação Zod em pt-BR
+  - Confirmação de exclusão via Dialog
+- [x] `components/pipeline/deal-detail-sheet.tsx` — clique no card abre detalhe em Sheet lateral
+- [x] Botão "Novo Negócio" por coluna e global
+- [x] 15 deals mock em `lib/mock-data.ts` distribuídos pelas 6 etapas
+- [x] Dark theme aplicado em todos os componentes do pipeline e leads
 
 **Commit final:**
 ```
@@ -354,26 +358,26 @@ feat: activities backend — activities table, RLS, CRUD server actions
 
 ---
 
-## M11 — Dashboard — UI
+## M11 — Dashboard — UI ✅
 
-**Branch:** `feat/dashboard-ui`
+**Branch:** `feat/dashboard-ui` → merged em `main`
 **Objetivo:** Dashboard com KPIs visuais e gráfico de funil — dados mockados mas completamente estilizados e responsivos.
 
 ### Entregas
 
-- [ ] `app/(app)/dashboard/page.tsx` — layout completo
-- [ ] `components/dashboard/kpi-card.tsx` — card reutilizável:
+- [x] `app/(app)/dashboard/page.tsx` — layout completo
+- [x] `components/dashboard/kpi-card.tsx` — card reutilizável:
   - Ícone, título, valor principal, variação percentual
   - 4 instâncias: Total Leads, Negócios Abertos, Valor do Pipeline, Taxa de Conversão
-- [ ] `components/dashboard/funnel-chart.tsx` — gráfico Recharts:
-  - `FunnelChart` ou `BarChart` horizontal por etapa
+- [x] `components/dashboard/funnel-chart.tsx` — gráfico Recharts:
+  - `BarChart` horizontal por etapa
   - Cores das etapas definidas no `CLAUDE.md`
   - Tooltip com valor e count
-- [ ] `components/dashboard/upcoming-deals.tsx` — lista de negócios com prazo próximo:
+- [x] `components/dashboard/upcoming-deals.tsx` — lista de negócios com prazo próximo:
   - Top 5, ordenado por prazo
   - Badge de urgência (< 3 dias = vermelho, < 7 dias = amarelo)
-- [ ] Grid responsivo: 2 cols em tablet, 4 em desktop
-- [ ] Dados mock em `lib/mock-data.ts`
+- [x] Grid responsivo: 2 cols em tablet, 4 em desktop
+- [x] Dados mock em `lib/mock-data.ts`
 
 **Commit final:**
 ```
