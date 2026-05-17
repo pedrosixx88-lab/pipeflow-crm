@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +30,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] = useState<string | null>(null);
 
   const {
     register,
@@ -42,11 +43,12 @@ export default function RegisterPage() {
   async function onSubmit(data: RegisterFormData) {
     setServerError(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data: result, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: { full_name: data.name },
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
       },
     });
 
@@ -59,7 +61,46 @@ export default function RegisterPage() {
       return;
     }
 
+    // Supabase retorna session=null quando confirmação de e-mail está ativa
+    if (!result.session) {
+      setPendingConfirmation(data.email);
+      return;
+    }
+
+    // Confirmação desativada — sessão criada direto, pode ir para onboarding
     router.push("/onboarding");
+  }
+
+  if (pendingConfirmation) {
+    return (
+      <div className="flex flex-col gap-6">
+        <AuthLogo />
+        <div className="rounded-xl border border-border bg-card p-8 shadow-sm">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div className="flex size-14 items-center justify-center rounded-full bg-green-50">
+              <MailCheck className="h-7 w-7 text-green-600" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <h2 className="text-lg font-bold text-foreground">Confirme seu e-mail</h2>
+              <p className="text-sm text-muted-foreground">
+                Enviamos um link de confirmação para{" "}
+                <span className="font-medium text-foreground">{pendingConfirmation}</span>.
+                Clique no link para ativar sua conta.
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Não recebeu? Verifique a pasta de spam.
+            </p>
+          </div>
+        </div>
+        <p className="text-center text-sm text-muted-foreground">
+          Já confirmou?{" "}
+          <Link href="/login" className="font-medium text-blue-600 transition-colors hover:text-blue-700">
+            Fazer login
+          </Link>
+        </p>
+      </div>
+    );
   }
 
   return (

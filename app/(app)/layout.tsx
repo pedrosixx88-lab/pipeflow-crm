@@ -35,7 +35,8 @@ export default async function AppLayout({
   const profile = profileResult.data as Pick<ProfileRow, "full_name" | "avatar_url" | "onboarded"> | null;
   const memberRows = memberResult.data as Pick<WorkspaceMemberRow, "workspace_id">[] | null;
 
-  if (profile && !profile.onboarded) redirect("/onboarding");
+  // Redireciona para onboarding se perfil não existe ainda ou não foi onboarded
+  if (!profile || !profile.onboarded) redirect("/onboarding");
 
   // Busca workspaces pelos IDs onde o usuário é membro ativo
   const workspaceIds = (memberRows ?? []).map((r) => r.workspace_id);

@@ -38,8 +38,14 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/settings");
 
   const isAuthRoute = pathname === "/login" || pathname === "/register";
+  const isOnboardingRoute = pathname.startsWith("/onboarding");
 
   if (isAppRoute && !user) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // Onboarding requer sessão — sem ela, manda para login
+  if (isOnboardingRoute && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
