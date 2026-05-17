@@ -90,6 +90,12 @@ export async function POST(req: NextRequest) {
         // Sync do status (ficará past_due ou unpaid)
         await upsertSubscription(supabase, workspaceId, sub);
 
+        // Marca o workspace com payment_failed para mostrar banner de alerta na UI
+        await supabase
+          .from("workspaces")
+          .update({ plan: "payment_failed" })
+          .eq("id", workspaceId);
+
         console.warn("[stripe-webhook] Falha no pagamento:", {
           workspaceId,
           subscriptionId,

@@ -16,7 +16,7 @@ export type DealStage =
 
 export type ActivityType = "ligacao" | "email" | "reuniao" | "nota";
 
-export type WorkspacePlan = "free" | "pro";
+export type WorkspacePlan = "free" | "pro" | "payment_failed";
 
 export type MemberRole = "admin" | "member";
 

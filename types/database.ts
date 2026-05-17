@@ -12,7 +12,7 @@ export type Json =
 
 // ── Enums ──────────────────────────────────────────────────────
 
-export type WorkspacePlan     = 'free' | 'pro';
+export type WorkspacePlan     = 'free' | 'pro' | 'payment_failed';
 export type MemberRole        = 'admin' | 'member';
 export type MemberStatus      = 'active' | 'pending';
 export type LeadStatus        = 'novo' | 'contato_realizado' | 'proposta_enviada' | 'negociacao' | 'fechado_ganho' | 'fechado_perdido' | 'arquivado';

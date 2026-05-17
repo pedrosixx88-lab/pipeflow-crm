@@ -156,7 +156,7 @@ function WorkspaceNameCard({
   function handleSave() {
     startTransition(async () => {
       const result = await updateWorkspace({ name });
-      if (result?.error) {
+      if ("error" in result) {
         toast.error(result.error);
       } else {
         toast.success("Nome do workspace atualizado.");
