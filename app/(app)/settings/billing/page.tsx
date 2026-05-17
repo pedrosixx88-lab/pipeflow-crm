@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { asTyped } from "@/lib/supabase/typed-client";
+import { getPlanUsage } from "@/lib/limits";
 import { BillingClient } from "@/components/settings/billing-client";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +37,7 @@ export default async function BillingPage({
 
   if (!activeWorkspaceId) redirect("/dashboard");
 
-  const [workspaceRes, subscriptionRes, isAdminRes] = await Promise.all([
+  const [workspaceRes, subscriptionRes, isAdminRes, usage] = await Promise.all([
     supabase
       .from("workspaces")
       .select("id, name, plan, stripe_customer_id, stripe_subscription_id")
@@ -59,6 +60,8 @@ export default async function BillingPage({
       .eq("role", "admin")
       .eq("status", "active")
       .single(),
+
+    getPlanUsage(supabase as unknown as Parameters<typeof getPlanUsage>[0], activeWorkspaceId),
   ]);
 
   if (!workspaceRes.data) redirect("/dashboard");
@@ -72,6 +75,8 @@ export default async function BillingPage({
       isAdmin={!!isAdminRes.data}
       successMessage={params.success === "1"}
       canceledMessage={params.canceled === "1"}
+      leadCount={usage.leadCount}
+      memberCount={usage.memberCount}
     />
   );
 }
