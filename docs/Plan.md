@@ -137,29 +137,32 @@ feat: auth UI — login, register, forgot-password screens with form validation
 
 ---
 
-## M4 — Auth — Backend
+## M4 — Auth — Backend ✅ (parcial)
 
-**Branch:** `feat/auth-backend`
+**Branch:** `feat/supabase-core` → merged em `main`
 **Objetivo:** Autenticação real com Supabase Auth funcionando — login, cadastro, logout, sessão persistida, rotas protegidas via middleware.
 
 ### Entregas
 
-- [ ] Criar projeto no Supabase e copiar credenciais para `.env.local`
-- [ ] Criar `lib/supabase/client.ts` — `createBrowserClient`
-- [ ] Criar `lib/supabase/server.ts` — `createServerClient` (SSR)
-- [ ] Criar `middleware.ts` na raiz — proteger rotas `(app)/*`, redirecionar para `/login`
+- [x] Criar projeto no Supabase e copiar credenciais para `.env.local`
+- [x] Criar `lib/supabase/client.ts` — `createBrowserClient`
+- [x] Criar `lib/supabase/server.ts` — `createServerClient` (SSR)
+- [x] Criar `middleware.ts` na raiz — proteger rotas `(app)/*`, redirecionar para `/login`
+- [x] Criar migration: tabela `profiles` + trigger `handle_new_user` (cria perfil no signup)
+- [x] Criar migrations: `workspaces`, `workspace_members`, `leads`, `deals`, `activities`, `subscriptions`
+- [x] RLS habilitado e testado em todas as 7 tabelas (anon retorna 0 linhas)
+- [x] Tipos TypeScript gerados em `types/database.ts` e `types/supabase.ts`
 - [ ] Integrar login com `supabase.auth.signInWithPassword()`
 - [ ] Integrar cadastro com `supabase.auth.signUp()`
 - [ ] Integrar forgot-password com `supabase.auth.resetPasswordForEmail()`
 - [ ] Logout via Server Action em `app/actions/auth.ts`
 - [ ] Redirecionar usuário autenticado de `/login` para `/dashboard`
 - [ ] Exibir e-mail do usuário logado na sidebar
-- [ ] Criar migration inicial: tabela `profiles` (id, full_name, avatar_url, created_at)
-- [ ] Trigger Supabase para criar `profile` automaticamente no signup
 
-**Commit final:**
+**Commits:**
 ```
-feat: auth backend — Supabase Auth, session management, route protection, profiles table
+feat: migrations & RLS — profiles, workspaces, leads, deals, activities, subscriptions
+fix: corrige 3 bugs nas migrations após revisão
 ```
 
 ---
