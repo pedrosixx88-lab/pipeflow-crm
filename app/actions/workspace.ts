@@ -243,9 +243,16 @@ export async function inviteMember(formData: unknown) {
 </td></tr>
 </table></body></html>`;
 
+  // Em desenvolvimento o Resend só entrega para o e-mail da conta (sem domínio verificado).
+  // RESEND_DEV_TO substitui o destinatário localmente mantendo o conteúdo real do convite.
+  const toEmail =
+    process.env.NODE_ENV !== "production" && process.env.RESEND_DEV_TO
+      ? process.env.RESEND_DEV_TO
+      : email;
+
   const { error: emailError } = await resend.emails.send({
     from: FROM_EMAIL,
-    to: email,
+    to: toEmail,
     subject: `${inviterName} convidou você para ${workspace.name} no PipeFlow CRM`,
     html,
     text: inviteEmailText({
