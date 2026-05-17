@@ -39,6 +39,8 @@ export async function middleware(request: NextRequest) {
 
   const isAuthRoute = pathname === "/login" || pathname === "/register";
   const isOnboardingRoute = pathname.startsWith("/onboarding");
+  // /invite/[token] é pública mas redireciona para login se necessário
+  const isInviteRoute = pathname.startsWith("/invite/");
 
   if (isAppRoute && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
@@ -47,6 +49,13 @@ export async function middleware(request: NextRequest) {
   // Onboarding requer sessão — sem ela, manda para login
   if (isOnboardingRoute && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // Convite sem sessão: preserva o token como next param e manda para login
+  if (isInviteRoute && !user) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   if (isAuthRoute && user) {

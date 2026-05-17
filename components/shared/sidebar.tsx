@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -13,7 +13,9 @@ import {
   Plus,
   Zap,
   X,
+  Loader2,
 } from "lucide-react";
+import { switchWorkspace } from "@/app/actions/workspace";
 
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -39,7 +41,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/leads", label: "Leads", icon: Users },
   { href: "/pipeline", label: "Pipeline", icon: Kanban },
-  { href: "/settings", label: "Configurações", icon: Settings },
+  { href: "/settings/workspace", label: "Configurações", icon: Settings },
 ];
 
 function getInitials(name?: string | null) {
@@ -85,11 +87,26 @@ function PipeFlowLogo() {
   );
 }
 
+const WORKSPACE_COOKIE = "pf_workspace_id";
+
+function getActiveCookieId(workspaces: SidebarWorkspace[]): string {
+  if (typeof document === "undefined") return workspaces[0]?.id ?? "";
+  const match = document.cookie.match(new RegExp(`(?:^|; )${WORKSPACE_COOKIE}=([^;]+)`));
+  const fromCookie = match?.[1];
+  if (fromCookie && workspaces.some((w) => w.id === fromCookie)) return fromCookie;
+  return workspaces[0]?.id ?? "";
+}
+
 function WorkspaceSelector({ workspaces }: { workspaces: SidebarWorkspace[] }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [activeId, setActiveId] = useState<string>(workspaces[0]?.id ?? "");
+  const [activeId, setActiveId] = useState<string>(() => getActiveCookieId(workspaces));
+  const [isPending, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
+
+  // Sincroniza se o cookie mudar externamente (ex: aceite de convite em outra aba)
+  useEffect(() => {
+    setActiveId(getActiveCookieId(workspaces));
+  }, [workspaces]);
 
   const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
 
@@ -107,14 +124,27 @@ function WorkspaceSelector({ workspaces }: { workspaces: SidebarWorkspace[] }) {
 
   const initials = active.name.slice(0, 2).toUpperCase();
 
+  function handleSwitch(wsId: string) {
+    if (wsId === activeId) {
+      setOpen(false);
+      return;
+    }
+    setOpen(false);
+    setActiveId(wsId);
+    startTransition(async () => {
+      await switchWorkspace(wsId);
+    });
+  }
+
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        disabled={isPending}
+        className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-70"
       >
         <div className="flex size-6 shrink-0 items-center justify-center rounded-md bg-blue-500/15 text-[10px] font-bold text-blue-400">
-          {initials}
+          {isPending ? <Loader2 className="size-3 animate-spin" /> : initials}
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-medium text-sidebar-foreground">
@@ -144,11 +174,7 @@ function WorkspaceSelector({ workspaces }: { workspaces: SidebarWorkspace[] }) {
           {workspaces.map((ws) => (
             <button
               key={ws.id}
-              onClick={() => {
-                setActiveId(ws.id);
-                setOpen(false);
-                router.refresh();
-              }}
+              onClick={() => handleSwitch(ws.id)}
               className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-accent"
             >
               <div className="flex size-6 shrink-0 items-center justify-center rounded bg-blue-500/15 text-[10px] font-bold text-blue-400">
@@ -172,16 +198,14 @@ function WorkspaceSelector({ workspaces }: { workspaces: SidebarWorkspace[] }) {
             </button>
           ))}
           <Separator className="my-1 opacity-50" />
-          <button
-            onClick={() => {
-              setOpen(false);
-              router.push("/onboarding");
-            }}
+          <Link
+            href="/onboarding"
+            onClick={() => setOpen(false)}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <Plus className="size-3.5" />
             Novo workspace
-          </button>
+          </Link>
         </div>
       )}
     </div>
