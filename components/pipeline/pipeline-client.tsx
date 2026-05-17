@@ -146,7 +146,6 @@ export function PipelineClient({ initialDeals, leads }: PipelineClientProps) {
   }
 
   function handleDealsChange(updated: Deal[]) {
-    // Encontra o deal que mudou de estágio ou posição comparando com o estado atual
     const movedDeal = updated.find((u) => {
       const original = deals.find((d) => d.id === u.id);
       return original && (original.stage !== u.stage || original.position !== u.position);
@@ -154,15 +153,14 @@ export function PipelineClient({ initialDeals, leads }: PipelineClientProps) {
 
     if (!movedDeal) return;
 
-    const original = deals.find((d) => d.id === movedDeal.id)!;
+    // Captura snapshot antes de atualizar para poder reverter
+    const snapshot = [...deals];
 
-    // Atualização otimista imediata
     setDeals(updated);
 
-    // Persiste no banco em background
     const affectedDeals = updated
       .filter((u) => {
-        const orig = deals.find((d) => d.id === u.id);
+        const orig = snapshot.find((d) => d.id === u.id);
         return u.id !== movedDeal.id && orig && orig.position !== u.position;
       })
       .map((u) => ({ id: u.id, position: u.position }));
@@ -171,14 +169,10 @@ export function PipelineClient({ initialDeals, leads }: PipelineClientProps) {
       .then((result) => {
         if (result?.error) {
           toast.error("Erro ao salvar posição. Recarregando...");
-          // Reverte para o estado anterior
-          setDeals(deals);
+          setDeals(snapshot);
           router.refresh();
         }
       });
-
-    // Suprime warning de "não estamos usando startTransition aqui"
-    void original;
   }
 
   const viewingLead = viewingDeal ? leads.find((l) => l.id === viewingDeal.leadId) : undefined;

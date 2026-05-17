@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ export function LeadsClient({
   const [formOpen, setFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | undefined>(undefined);
   const [isPending, startTransition] = useTransition();
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function openCreate() { setEditingLead(undefined); setFormOpen(true); }
   function openEdit(lead: Lead) { setEditingLead(lead); setFormOpen(true); }
@@ -55,9 +56,13 @@ export function LeadsClient({
     router.push(`/leads?${params.toString()}`);
   }
 
-  function handleSearchChange(search: string) {
-    updateSearchParams({ search, page: "" });
-  }
+  const handleSearchChange = useCallback((search: string) => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      updateSearchParams({ search, page: "" });
+    }, 400);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   function handleStatusChange(status: LeadStatus | "all") {
     updateSearchParams({ status: status === "all" ? "" : status, page: "" });

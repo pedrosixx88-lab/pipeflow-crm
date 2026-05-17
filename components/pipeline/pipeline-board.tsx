@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -84,6 +84,8 @@ export function PipelineBoard({
   onEditDeal,
 }: PipelineBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -178,6 +180,28 @@ export function PipelineBoard({
   const activeLead = activeDeal
     ? leads.find((l) => l.id === activeDeal.leadId)
     : undefined;
+
+  if (!mounted) {
+    return (
+      <div className="flex gap-3 overflow-x-auto pb-4">
+        {STAGE_ORDER.map((stage) => {
+          const stageDeals = deals
+            .filter((d) => d.stage === stage)
+            .sort((a, b) => a.position - b.position);
+          return (
+            <PipelineColumn
+              key={stage}
+              stage={stage}
+              deals={stageDeals}
+              leads={leads}
+              onCreateDeal={onCreateDeal}
+              onEditDeal={onEditDeal}
+            />
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <DndContext

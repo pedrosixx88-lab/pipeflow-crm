@@ -9,10 +9,19 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { StatusBadge } from "@/components/leads/status-badge";
 import { LeadForm } from "@/components/leads/lead-form";
 import type { LeadFormValues } from "@/components/leads/lead-form";
 import { updateLead, archiveLead, deleteLead } from "@/app/actions/leads";
+import { createActivity } from "@/app/actions/activities";
 import { formatDate, formatRelativeDate, cn } from "@/lib/utils";
 import type { Lead, Activity, ActivityType, Deal, DealStage } from "@/types";
 import { toast } from "sonner";
@@ -108,7 +117,30 @@ interface LeadDetailClientProps {
 export function LeadDetailClient({ lead, activities, deals }: LeadDetailClientProps) {
   const router = useRouter();
   const [formOpen, setFormOpen] = useState(false);
+  const [activityType, setActivityType] = useState<ActivityType | null>(null);
+  const [activityText, setActivityText] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  function openActivity(type: ActivityType) {
+    setActivityType(type);
+    setActivityText("");
+  }
+
+  function handleSaveActivity() {
+    if (!activityType || !activityText.trim()) return;
+    startTransition(async () => {
+      const result = await createActivity({
+        leadId:      lead.id,
+        type:        activityType,
+        description: activityText.trim(),
+      });
+      if (result.error) { toast.error(result.error); return; }
+      toast.success("Atividade registrada!");
+      setActivityType(null);
+      setActivityText("");
+      router.refresh();
+    });
+  }
 
   const initials = lead.name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
 
@@ -262,7 +294,7 @@ export function LeadDetailClient({ lead, activities, deals }: LeadDetailClientPr
                   { type: "reuniao", icon: <CalendarDays className="h-3.5 w-3.5" />, label: "Reunião" },
                   { type: "nota",    icon: <StickyNote className="h-3.5 w-3.5" />, label: "Nota" },
                 ] as const).map(({ type, icon, label }) => (
-                  <Button key={type} variant="outline" size="sm" className="gap-1.5 text-xs" title={`Registrar ${label}`}>
+                  <Button key={type} variant="outline" size="sm" className="gap-1.5 text-xs" title={`Registrar ${label}`} onClick={() => openActivity(type)}>
                     {icon}
                     <span className="hidden sm:inline">{label}</span>
                   </Button>
@@ -282,6 +314,31 @@ export function LeadDetailClient({ lead, activities, deals }: LeadDetailClientPr
         onDelete={handleDelete}
         isSubmitting={isPending}
       />
+
+      <Dialog open={!!activityType} onOpenChange={(open) => { if (!open) setActivityType(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {activityType && `Registrar ${ACTIVITY_LABEL[activityType]}`}
+            </DialogTitle>
+          </DialogHeader>
+          <Textarea
+            placeholder="Descreva o que aconteceu..."
+            className="min-h-[120px] resize-none"
+            value={activityText}
+            onChange={(e) => setActivityText(e.target.value)}
+            autoFocus
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setActivityType(null)} disabled={isPending}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveActivity} disabled={isPending || !activityText.trim()}>
+              {isPending ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
