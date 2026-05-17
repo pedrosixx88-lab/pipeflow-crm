@@ -15,12 +15,12 @@ export type Json =
 export type WorkspacePlan     = 'free' | 'pro';
 export type MemberRole        = 'admin' | 'member';
 export type MemberStatus      = 'active' | 'pending';
-export type LeadStatus        = 'novo' | 'contatado' | 'qualificado' | 'perdido' | 'arquivado';
+export type LeadStatus        = 'novo' | 'contato_realizado' | 'proposta_enviada' | 'negociacao' | 'fechado_ganho' | 'fechado_perdido' | 'arquivado';
 export type DealStage         = 'novo_lead' | 'contato_realizado' | 'proposta_enviada' | 'negociacao' | 'fechado_ganho' | 'fechado_perdido';
 export type ActivityType      = 'ligacao' | 'email' | 'reuniao' | 'nota';
 export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete';
 
-// ── Database interface (padrão Supabase) ──────────────────────
+// ── Database interface (padrão Supabase — Relationships obrigatório no v2) ──
 
 export interface Database {
   public: {
@@ -49,6 +49,7 @@ export interface Database {
           onboarded?: boolean;
           updated_at?: string;
         };
+        Relationships: [];
       };
 
       workspaces: {
@@ -81,6 +82,7 @@ export interface Database {
           stripe_subscription_id?: string | null;
           updated_at?:            string;
         };
+        Relationships: [];
       };
 
       workspace_members: {
@@ -110,6 +112,7 @@ export interface Database {
           invited_email?: string | null;
           status?:       MemberStatus;
         };
+        Relationships: [];
       };
 
       leads: {
@@ -154,6 +157,7 @@ export interface Database {
           notes?:       string | null;
           updated_at?:  string;
         };
+        Relationships: [];
       };
 
       deals: {
@@ -195,6 +199,15 @@ export interface Database {
           deadline?:    string | null;
           updated_at?:  string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "deals_lead_id_fkey";
+            columns: ["lead_id"];
+            isOneToOne: false;
+            referencedRelation: "leads";
+            referencedColumns: ["id"];
+          }
+        ];
       };
 
       activities: {
@@ -227,6 +240,15 @@ export interface Database {
           description?: string;
           occurred_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "activities_lead_id_fkey";
+            columns: ["lead_id"];
+            isOneToOne: false;
+            referencedRelation: "leads";
+            referencedColumns: ["id"];
+          }
+        ];
       };
 
       subscriptions: {
@@ -271,6 +293,7 @@ export interface Database {
           canceled_at?:           string | null;
           updated_at?:            string;
         };
+        Relationships: [];
       };
     };
 

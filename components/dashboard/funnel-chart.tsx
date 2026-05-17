@@ -12,7 +12,7 @@ import {
 import type { DealStage } from "@/types";
 
 interface StageData {
-  stage: DealStage;
+  stage: DealStage | string;
   label: string;
   count: number;
   value: number;

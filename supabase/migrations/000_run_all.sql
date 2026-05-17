@@ -186,9 +186,11 @@ create trigger on_workspace_created
 
 create type public.lead_status as enum (
   'novo',
-  'contatado',
-  'qualificado',
-  'perdido',
+  'contato_realizado',
+  'proposta_enviada',
+  'negociacao',
+  'fechado_ganho',
+  'fechado_perdido',
   'arquivado'
 );
 
