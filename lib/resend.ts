@@ -1,4 +1,5 @@
-// Resend client — configurado no M13 (Workspace)
-// import { Resend } from "resend";
+import { Resend } from "resend";
 
-export {};
+export const resend = new Resend(process.env.RESEND_API_KEY);
+
+export const FROM_EMAIL = "PipeFlow CRM <noreply@pipeflow.app>";

@@ -88,3 +88,24 @@ export interface Profile {
   onboarded: boolean;
   createdAt: string;
 }
+
+export interface WorkspaceInvite {
+  id: string;
+  workspaceId: string;
+  invitedBy: string;
+  email: string;
+  role: MemberRole;
+  token: string;
+  expiresAt: string;
+  acceptedAt?: string;
+  createdAt: string;
+}
+
+// Membro enriquecido com dados do perfil (usado na UI de membros)
+export interface MemberWithProfile extends Member {
+  profile?: {
+    fullName?: string;
+    avatarUrl?: string;
+    email?: string;
+  };
+}

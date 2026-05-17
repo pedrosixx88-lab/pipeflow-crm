@@ -251,6 +251,35 @@ export interface Database {
         ];
       };
 
+      workspace_invites: {
+        Row: {
+          id:           string;
+          workspace_id: string;
+          invited_by:   string;
+          email:        string;
+          role:         MemberRole;
+          token:        string;
+          expires_at:   string;
+          accepted_at:  string | null;
+          created_at:   string;
+        };
+        Insert: {
+          id?:          string;
+          workspace_id: string;
+          invited_by:   string;
+          email:        string;
+          role?:        MemberRole;
+          token?:       string;
+          expires_at?:  string;
+          accepted_at?: string | null;
+          created_at?:  string;
+        };
+        Update: {
+          accepted_at?: string | null;
+        };
+        Relationships: [];
+      };
+
       subscriptions: {
         Row: {
           id:                     string;
@@ -304,6 +333,10 @@ export interface Database {
         Args: Record<string, never>;
         Returns: string[];
       };
+      accept_workspace_invite: {
+        Args: { p_token: string; p_user_id: string };
+        Returns: Json;
+      };
     };
 
     Enums: {
@@ -323,6 +356,7 @@ export interface Database {
 export type ProfileRow           = Database['public']['Tables']['profiles']['Row'];
 export type WorkspaceRow         = Database['public']['Tables']['workspaces']['Row'];
 export type WorkspaceMemberRow   = Database['public']['Tables']['workspace_members']['Row'];
+export type WorkspaceInviteRow   = Database['public']['Tables']['workspace_invites']['Row'];
 export type LeadRow              = Database['public']['Tables']['leads']['Row'];
 export type DealRow              = Database['public']['Tables']['deals']['Row'];
 export type ActivityRow          = Database['public']['Tables']['activities']['Row'];
