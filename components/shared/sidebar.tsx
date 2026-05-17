@@ -8,6 +8,7 @@ import {
   Users,
   Kanban,
   Settings,
+  CreditCard,
   ChevronDown,
   Check,
   Plus,
@@ -42,6 +43,7 @@ const NAV_ITEMS = [
   { href: "/leads", label: "Leads", icon: Users },
   { href: "/pipeline", label: "Pipeline", icon: Kanban },
   { href: "/settings/workspace", label: "Configurações", icon: Settings },
+  { href: "/settings/billing", label: "Cobrança", icon: CreditCard },
 ];
 
 function getInitials(name?: string | null) {
@@ -312,9 +314,12 @@ function SidebarContent({ user, workspaces, onNavClick }: SidebarContentProps) {
                 <p className="mt-0.5 text-[10px] text-muted-foreground">
                   Upgrade para leads ilimitados
                 </p>
-                <button className="mt-2 text-[10px] font-medium text-blue-400 transition-colors hover:text-blue-300">
+                <Link
+                  href="/settings/billing"
+                  className="mt-2 inline-block text-[10px] font-medium text-blue-400 transition-colors hover:text-blue-300"
+                >
                   Upgrade para Pro →
-                </button>
+                </Link>
               </div>
             </div>
           </div>
