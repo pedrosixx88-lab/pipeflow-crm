@@ -52,14 +52,13 @@ create or replace trigger on_auth_user_created
 -- RLS
 alter table public.profiles enable row level security;
 
--- skill: security-rls-performance — (select auth.uid()) é avaliado uma vez,
--- não por linha. Evita custo linear em tabelas grandes.
-create policy "profiles: leitura do próprio perfil"
-  on public.profiles for select
+-- (select auth.uid()) is evaluated once per query, not per row — avoids linear scan cost
+create policy "profiles_select"
+  on public.profiles for select to authenticated
   using ((select auth.uid()) = id);
 
-create policy "profiles: atualização do próprio perfil"
-  on public.profiles for update
+create policy "profiles_update"
+  on public.profiles for update to authenticated
   using ((select auth.uid()) = id)
   with check ((select auth.uid()) = id);
 
@@ -117,16 +116,18 @@ $$;
 -- RLS — workspaces
 alter table public.workspaces enable row level security;
 
-create policy "workspaces: leitura para membros ativos"
-  on public.workspaces for select
+create policy "workspaces_select"
+  on public.workspaces for select to authenticated
   using (id in (select public.my_workspace_ids()));
 
-create policy "workspaces: criação livre (usuário autenticado)"
-  on public.workspaces for insert
+-- FOR ALL pattern required: FOR INSERT WITH CHECK alone does not work in Supabase PostgREST context
+create policy "workspaces_insert_update_delete"
+  on public.workspaces for all to authenticated
+  using (true)
   with check ((select auth.uid()) is not null);
 
-create policy "workspaces: atualização por admin"
-  on public.workspaces for update
+create policy "workspaces_update_admin"
+  on public.workspaces for update to authenticated
   using (
     id in (
       select workspace_id from public.workspace_members
@@ -139,41 +140,27 @@ create policy "workspaces: atualização por admin"
 -- RLS — workspace_members
 alter table public.workspace_members enable row level security;
 
-create policy "workspace_members: leitura para membros do workspace"
-  on public.workspace_members for select
+create policy "workspace_members_select"
+  on public.workspace_members for select to authenticated
   using (workspace_id in (select public.my_workspace_ids()));
 
--- Apenas admins adicionam membros. Aceite de convite usa service_role no server action.
-create policy "workspace_members: inserção por admin"
-  on public.workspace_members for insert
+-- Apenas admins gerenciam membros. FOR ALL required for INSERT to work in Supabase.
+create policy "workspace_members_write"
+  on public.workspace_members for all to authenticated
+  using (
+    workspace_id in (
+      select workspace_id from public.workspace_members wm
+      where  wm.user_id = (select auth.uid())
+        and  wm.role    = 'admin'
+        and  wm.status  = 'active'
+    )
+  )
   with check (
     workspace_id in (
-      select workspace_id from public.workspace_members
-      where  user_id = (select auth.uid())
-        and  role    = 'admin'
-        and  status  = 'active'
-    )
-  );
-
-create policy "workspace_members: atualização por admin"
-  on public.workspace_members for update
-  using (
-    workspace_id in (
-      select workspace_id from public.workspace_members
-      where  user_id = (select auth.uid())
-        and  role    = 'admin'
-        and  status  = 'active'
-    )
-  );
-
-create policy "workspace_members: remoção por admin"
-  on public.workspace_members for delete
-  using (
-    workspace_id in (
-      select workspace_id from public.workspace_members
-      where  user_id = (select auth.uid())
-        and  role    = 'admin'
-        and  status  = 'active'
+      select workspace_id from public.workspace_members wm
+      where  wm.user_id = (select auth.uid())
+        and  wm.role    = 'admin'
+        and  wm.status  = 'active'
     )
   );
 
@@ -237,22 +224,14 @@ create trigger leads_updated_at
 -- RLS
 alter table public.leads enable row level security;
 
-create policy "leads: leitura para membros do workspace"
-  on public.leads for select
+create policy "leads_select"
+  on public.leads for select to authenticated
   using (workspace_id in (select public.my_workspace_ids()));
 
-create policy "leads: criação para membros do workspace"
-  on public.leads for insert
-  with check (workspace_id in (select public.my_workspace_ids()));
-
-create policy "leads: atualização para membros do workspace"
-  on public.leads for update
+create policy "leads_write"
+  on public.leads for all to authenticated
   using (workspace_id in (select public.my_workspace_ids()))
   with check (workspace_id in (select public.my_workspace_ids()));
-
-create policy "leads: exclusão para membros do workspace"
-  on public.leads for delete
-  using (workspace_id in (select public.my_workspace_ids()));
 
 
 -- ================================================================
@@ -294,22 +273,14 @@ create trigger deals_updated_at
 -- RLS
 alter table public.deals enable row level security;
 
-create policy "deals: leitura para membros do workspace"
-  on public.deals for select
+create policy "deals_select"
+  on public.deals for select to authenticated
   using (workspace_id in (select public.my_workspace_ids()));
 
-create policy "deals: criação para membros do workspace"
-  on public.deals for insert
-  with check (workspace_id in (select public.my_workspace_ids()));
-
-create policy "deals: atualização para membros do workspace"
-  on public.deals for update
+create policy "deals_write"
+  on public.deals for all to authenticated
   using (workspace_id in (select public.my_workspace_ids()))
   with check (workspace_id in (select public.my_workspace_ids()));
-
-create policy "deals: exclusão para membros do workspace"
-  on public.deals for delete
-  using (workspace_id in (select public.my_workspace_ids()));
 
 
 -- ================================================================
@@ -342,22 +313,14 @@ create index activities_occurred_at_idx  on public.activities (occurred_at desc)
 -- RLS
 alter table public.activities enable row level security;
 
-create policy "activities: leitura para membros do workspace"
-  on public.activities for select
+create policy "activities_select"
+  on public.activities for select to authenticated
   using (workspace_id in (select public.my_workspace_ids()));
 
-create policy "activities: criação para membros do workspace"
-  on public.activities for insert
-  with check (workspace_id in (select public.my_workspace_ids()));
-
-create policy "activities: atualização para membros do workspace"
-  on public.activities for update
+create policy "activities_write"
+  on public.activities for all to authenticated
   using (workspace_id in (select public.my_workspace_ids()))
   with check (workspace_id in (select public.my_workspace_ids()));
-
-create policy "activities: exclusão para membros do workspace"
-  on public.activities for delete
-  using (workspace_id in (select public.my_workspace_ids()));
 
 
 -- ================================================================
