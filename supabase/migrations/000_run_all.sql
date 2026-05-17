@@ -52,14 +52,16 @@ create or replace trigger on_auth_user_created
 -- RLS
 alter table public.profiles enable row level security;
 
+-- skill: security-rls-performance — (select auth.uid()) é avaliado uma vez,
+-- não por linha. Evita custo linear em tabelas grandes.
 create policy "profiles: leitura do próprio perfil"
   on public.profiles for select
-  using (auth.uid() = id);
+  using ((select auth.uid()) = id);
 
 create policy "profiles: atualização do próprio perfil"
   on public.profiles for update
-  using (auth.uid() = id)
-  with check (auth.uid() = id);
+  using ((select auth.uid()) = id)
+  with check ((select auth.uid()) = id);
 
 
 -- ================================================================
@@ -70,13 +72,12 @@ create type public.workspace_plan as enum ('free', 'pro');
 create type public.member_role   as enum ('admin', 'member');
 create type public.member_status as enum ('active', 'pending');
 
--- Tabela de workspaces
+-- Tabela de workspaces (sem owner_id — membership gerenciada por workspace_members)
 create table if not exists public.workspaces (
   id                     uuid primary key default gen_random_uuid(),
   name                   text not null,
   slug                   text not null unique,
   plan                   public.workspace_plan not null default 'free',
-  owner_id               uuid references auth.users (id) on delete set null,
   stripe_customer_id     text,
   stripe_subscription_id text,
   created_at             timestamptz not null default now(),
@@ -100,13 +101,16 @@ create table if not exists public.workspace_members (
 
 create index workspace_members_workspace_id_idx on public.workspace_members (workspace_id);
 create index workspace_members_user_id_idx      on public.workspace_members (user_id);
+-- Índice composto para a query mais frequente de RLS (user_id + status)
+create index workspace_members_user_status_idx  on public.workspace_members (user_id, status);
 
--- Função auxiliar de RLS: IDs de workspaces onde o usuário é membro ativo
+-- Função auxiliar de RLS: IDs de workspaces onde o usuário é membro ativo.
+-- security definer + stable permite ao Postgres cachear o resultado por query.
 create or replace function public.my_workspace_ids()
 returns setof uuid language sql security definer stable as $$
   select workspace_id
   from   public.workspace_members
-  where  user_id = auth.uid()
+  where  user_id = (select auth.uid())
     and  status  = 'active';
 $$;
 
@@ -119,14 +123,14 @@ create policy "workspaces: leitura para membros ativos"
 
 create policy "workspaces: criação livre (usuário autenticado)"
   on public.workspaces for insert
-  with check (auth.uid() is not null);
+  with check ((select auth.uid()) is not null);
 
 create policy "workspaces: atualização por admin"
   on public.workspaces for update
   using (
     id in (
       select workspace_id from public.workspace_members
-      where  user_id = auth.uid()
+      where  user_id = (select auth.uid())
         and  role    = 'admin'
         and  status  = 'active'
     )
@@ -145,7 +149,7 @@ create policy "workspace_members: inserção por admin"
   with check (
     workspace_id in (
       select workspace_id from public.workspace_members
-      where  user_id = auth.uid()
+      where  user_id = (select auth.uid())
         and  role    = 'admin'
         and  status  = 'active'
     )
@@ -156,7 +160,7 @@ create policy "workspace_members: atualização por admin"
   using (
     workspace_id in (
       select workspace_id from public.workspace_members
-      where  user_id = auth.uid()
+      where  user_id = (select auth.uid())
         and  role    = 'admin'
         and  status  = 'active'
     )
@@ -167,20 +171,24 @@ create policy "workspace_members: remoção por admin"
   using (
     workspace_id in (
       select workspace_id from public.workspace_members
-      where  user_id = auth.uid()
+      where  user_id = (select auth.uid())
         and  role    = 'admin'
         and  status  = 'active'
     )
   );
 
--- Trigger: ao criar workspace, registra owner_id como admin ativo.
--- Usa new.owner_id (passado pelo server action) — auth.uid() não funciona em triggers.
+-- Trigger: ao criar workspace, registra o usuário autenticado como admin ativo.
+-- Usa auth.uid() via security definer — funciona porque o trigger roda no
+-- contexto da transação do usuário (não em background job).
 create or replace function public.handle_new_workspace()
 returns trigger language plpgsql security definer as $$
+declare
+  v_user_id uuid;
 begin
-  if new.owner_id is not null then
+  v_user_id := auth.uid();
+  if v_user_id is not null then
     insert into public.workspace_members (workspace_id, user_id, role, status)
-    values (new.id, new.owner_id, 'admin', 'active');
+    values (new.id, v_user_id, 'admin', 'active');
   end if;
   return new;
 end;
@@ -417,7 +425,7 @@ create policy "subscriptions: leitura por admin do workspace"
   using (
     workspace_id in (
       select workspace_id from public.workspace_members
-      where  user_id = auth.uid()
+      where  user_id = (select auth.uid())
         and  role    = 'admin'
         and  status  = 'active'
     )
