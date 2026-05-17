@@ -4,12 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { z } from "zod";
-import { renderToStaticMarkup } from "react-dom/server";
-import * as React from "react";
 import { createClient } from "@/lib/supabase/server";
 import { asTyped } from "@/lib/supabase/typed-client";
 import { resend, FROM_EMAIL } from "@/lib/resend";
-import { InviteEmail, inviteEmailText } from "@/emails/invite";
+import { inviteEmailText } from "@/emails/invite";
 
 const FREE_MEMBER_LIMIT = 2;
 
@@ -215,15 +213,35 @@ export async function inviteMember(formData: unknown) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const inviteUrl = `${appUrl}/invite/${invite.token}`;
 
-  // Envia e-mail
-  const html = renderToStaticMarkup(
-    React.createElement(InviteEmail, {
-      invitedByName: inviterName,
-      workspaceName: workspace.name,
-      role,
-      inviteUrl,
-    }),
-  );
+  // Envia e-mail (HTML inline — sem react-dom/server que é proibido em Server Actions)
+  const roleLabel = role === "admin" ? "Administrador" : "Membro";
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Convite para ${workspace.name}</title></head>
+<body style="background:#f9fafb;font-family:sans-serif;padding:40px 0;margin:0">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto">
+<tr><td style="background:#2563EB;border-radius:8px 8px 0 0;padding:32px 40px;text-align:center">
+  <span style="color:#fff;font-size:22px;font-weight:700">PipeFlow CRM</span>
+</td></tr>
+<tr><td style="background:#fff;padding:40px;border:1px solid #e5e7eb;border-top:none">
+  <p style="font-size:24px;font-weight:700;margin:0 0 8px;color:#111827">Você foi convidado!</p>
+  <p style="font-size:15px;color:#6b7280;margin:0 0 24px">
+    <strong style="color:#374151">${inviterName}</strong> convidou você para o workspace
+    <strong style="color:#374151">${workspace.name}</strong> como
+    <strong style="color:#374151">${roleLabel}</strong>.
+  </p>
+  <div style="text-align:center;padding:8px 0 32px">
+    <a href="${inviteUrl}" style="background:#2563EB;border-radius:8px;color:#fff;display:inline-block;font-size:15px;font-weight:600;padding:14px 32px;text-decoration:none">
+      Aceitar convite
+    </a>
+  </div>
+  <p style="font-size:13px;color:#9ca3af;margin:0 0 8px">Ou copie e cole este link no navegador:</p>
+  <p style="background:#f3f4f6;border-radius:6px;font-size:12px;padding:10px 14px;word-break:break-all;color:#2563EB;margin:0 0 24px">${inviteUrl}</p>
+  <p style="font-size:13px;color:#9ca3af;margin:0">Este convite expira em 7 dias.</p>
+</td></tr>
+<tr><td style="background:#f9fafb;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;padding:20px 40px;text-align:center">
+  <p style="font-size:12px;color:#9ca3af;margin:0">© ${new Date().getFullYear()} PipeFlow CRM</p>
+</td></tr>
+</table></body></html>`;
 
   const { error: emailError } = await resend.emails.send({
     from: FROM_EMAIL,
