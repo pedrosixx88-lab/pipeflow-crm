@@ -130,13 +130,15 @@ Profissional independente que atende vários clientes. Usa workspaces separados 
 
 ### Milestones sugeridos
 
-1. **Setup & Auth** — Projeto Next.js, Supabase, autenticação, layout base
-2. **Workspace & Multi-empresa** — Criação de workspace, convites, RLS
-3. **Leads & Contatos** — CRUD de leads, listagem, filtros, detalhe
-4. **Pipeline Kanban** — Colunas, cards, drag-and-drop, persistência
-5. **Atividades & Timeline** — Registro de interações vinculadas a leads
-6. **Dashboard** — Métricas, gráfico de funil, negócios próximos do prazo
-7. **Monetização** — Stripe Checkout, webhooks, Customer Portal, limites de plano
-8. **Landing Page** — Página pública com hero, features, planos, CTA
-9. **Onboarding** — Fluxo guiado pós-cadastro
-10. **Polimento & Deploy** — Testes, performance, deploy Vercel + Supabase
+| # | Milestone | Status |
+|---|-----------|--------|
+| 1 | **Setup & Auth** — Projeto Next.js, Supabase, autenticação, layout base | ✅ Concluído (Aulas 3.1–3.3) |
+| 2 | **Workspace & Multi-empresa** — Criação de workspace, convites por e-mail, papéis admin/membro, RLS, limite Free | ✅ Concluído (Aula 3.5) |
+| 3 | **Leads & Contatos** — CRUD de leads, listagem, filtros, detalhe | ✅ Concluído (Aula 3.4) |
+| 4 | **Pipeline Kanban** — Colunas, cards, drag-and-drop, persistência | 🔲 Pendente |
+| 5 | **Atividades & Timeline** — Registro de interações vinculadas a leads | 🔲 Pendente |
+| 6 | **Dashboard** — Métricas, gráfico de funil, negócios próximos do prazo | 🔲 Pendente |
+| 7 | **Monetização** — Stripe Checkout, webhooks, Customer Portal, limites de plano | 🔲 Pendente |
+| 8 | **Landing Page** — Página pública com hero, features, planos, CTA | 🔲 Pendente |
+| 9 | **Onboarding** — Fluxo guiado pós-cadastro | 🔲 Pendente |
+| 10 | **Polimento & Deploy** — Testes, performance, deploy Vercel + Supabase | 🔲 Pendente |
