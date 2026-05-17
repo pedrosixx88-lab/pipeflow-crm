@@ -38,8 +38,8 @@ begin
   insert into public.profiles (id, full_name, avatar_url)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'full_name', ''),
-    coalesce(new.raw_user_meta_data->>'avatar_url', '')
+    nullif(trim(coalesce(new.raw_user_meta_data->>'full_name', '')), ''),
+    nullif(trim(coalesce(new.raw_user_meta_data->>'avatar_url', '')), '')
   );
   return new;
 end;
@@ -76,6 +76,7 @@ create table if not exists public.workspaces (
   name                   text not null,
   slug                   text not null unique,
   plan                   public.workspace_plan not null default 'free',
+  owner_id               uuid references auth.users (id) on delete set null,
   stripe_customer_id     text,
   stripe_subscription_id text,
   created_at             timestamptz not null default now(),
@@ -138,7 +139,8 @@ create policy "workspace_members: leitura para membros do workspace"
   on public.workspace_members for select
   using (workspace_id in (select public.my_workspace_ids()));
 
-create policy "workspace_members: inserção por admin ou próprio usuário"
+-- Apenas admins adicionam membros. Aceite de convite usa service_role no server action.
+create policy "workspace_members: inserção por admin"
   on public.workspace_members for insert
   with check (
     workspace_id in (
@@ -147,7 +149,6 @@ create policy "workspace_members: inserção por admin ou próprio usuário"
         and  role    = 'admin'
         and  status  = 'active'
     )
-    or user_id = auth.uid()
   );
 
 create policy "workspace_members: atualização por admin"
@@ -172,12 +173,15 @@ create policy "workspace_members: remoção por admin"
     )
   );
 
--- Trigger: ao criar workspace, registra criador como admin ativo
+-- Trigger: ao criar workspace, registra owner_id como admin ativo.
+-- Usa new.owner_id (passado pelo server action) — auth.uid() não funciona em triggers.
 create or replace function public.handle_new_workspace()
 returns trigger language plpgsql security definer as $$
 begin
-  insert into public.workspace_members (workspace_id, user_id, role, status)
-  values (new.id, auth.uid(), 'admin', 'active');
+  if new.owner_id is not null then
+    insert into public.workspace_members (workspace_id, user_id, role, status)
+    values (new.id, new.owner_id, 'admin', 'active');
+  end if;
   return new;
 end;
 $$;
