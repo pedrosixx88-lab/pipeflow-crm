@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/shared/sidebar";
 import { Header } from "@/components/shared/header";
 import type { SidebarUser, SidebarWorkspace } from "@/components/shared/sidebar";
-import type { ProfileRow, WorkspaceRow, WorkspaceMemberRow } from "@/types/database";
+import type { ProfileRow, WorkspaceRow } from "@/types/database";
 
 export default async function AppLayout({
   children,
@@ -18,45 +18,33 @@ export default async function AppLayout({
 
   if (!user) redirect("/login");
 
-  // Busca perfil e memberships em paralelo
-  const [profileResult, memberResult] = await Promise.all([
+  // Busca perfil e workspaces em paralelo — RLS garante isolamento por usuário.
+  // workspaces usa my_workspace_ids() via RLS, evitando N+1 query.
+  const [profileResult, workspacesResult] = await Promise.all([
     supabase
       .from("profiles")
       .select("full_name, avatar_url, onboarded")
       .eq("id", user.id)
       .single(),
     supabase
-      .from("workspace_members")
-      .select("workspace_id")
-      .eq("user_id", user.id)
-      .eq("status", "active"),
+      .from("workspaces")
+      .select("id, name, slug, plan")
+      .order("created_at", { ascending: true }),
   ]);
 
   const profile = profileResult.data as Pick<ProfileRow, "full_name" | "avatar_url" | "onboarded"> | null;
-  const memberRows = memberResult.data as Pick<WorkspaceMemberRow, "workspace_id">[] | null;
 
   // Redireciona para onboarding se perfil não existe ainda ou não foi onboarded
   if (!profile || !profile.onboarded) redirect("/onboarding");
 
-  // Busca workspaces pelos IDs onde o usuário é membro ativo
-  const workspaceIds = (memberRows ?? []).map((r) => r.workspace_id);
-  let workspaces: SidebarWorkspace[] = [];
+  const wsRows = workspacesResult.data as Pick<WorkspaceRow, "id" | "name" | "slug" | "plan">[] | null;
 
-  if (workspaceIds.length > 0) {
-    const { data: wsRows } = await supabase
-      .from("workspaces")
-      .select("id, name, slug, plan")
-      .in("id", workspaceIds);
-
-    const typed = wsRows as Pick<WorkspaceRow, "id" | "name" | "slug" | "plan">[] | null;
-
-    workspaces = (typed ?? []).map((w) => ({
-      id: w.id,
-      name: w.name,
-      slug: w.slug,
-      plan: w.plan,
-    }));
-  }
+  const workspaces: SidebarWorkspace[] = (wsRows ?? []).map((w) => ({
+    id: w.id,
+    name: w.name,
+    slug: w.slug,
+    plan: w.plan,
+  }));
 
   const sidebarUser: SidebarUser = {
     id: user.id,

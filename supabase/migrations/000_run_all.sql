@@ -103,13 +103,25 @@ create index workspace_members_user_id_idx      on public.workspace_members (use
 -- Índice composto para a query mais frequente de RLS (user_id + status)
 create index workspace_members_user_status_idx  on public.workspace_members (user_id, status);
 
--- Função auxiliar de RLS: IDs de workspaces onde o usuário é membro ativo.
--- security definer + stable permite ao Postgres cachear o resultado por query.
+-- Helper: workspaces onde o usuário é membro ativo (qualquer role).
+-- security definer bypasses RLS — quebra recursão em políticas da própria tabela.
+-- (select auth.uid()) avaliado uma vez por query, não por linha.
 create or replace function public.my_workspace_ids()
 returns setof uuid language sql security definer stable as $$
   select workspace_id
   from   public.workspace_members
   where  user_id = (select auth.uid())
+    and  status  = 'active';
+$$;
+
+-- Helper: workspaces onde o usuário é ADMIN ativo.
+-- Usado em políticas de workspace_members e subscriptions para evitar recursão.
+create or replace function public.my_admin_workspace_ids()
+returns setof uuid language sql security definer stable as $$
+  select workspace_id
+  from   public.workspace_members
+  where  user_id = (select auth.uid())
+    and  role    = 'admin'
     and  status  = 'active';
 $$;
 
@@ -120,22 +132,17 @@ create policy "workspaces_select"
   on public.workspaces for select to authenticated
   using (id in (select public.my_workspace_ids()));
 
--- FOR ALL pattern required: FOR INSERT WITH CHECK alone does not work in Supabase PostgREST context
+-- FOR ALL pattern required: FOR INSERT WITH CHECK alone does not work in Supabase PostgREST.
+-- USING (true) permite insert; WITH CHECK verifica que o usuário está autenticado.
 create policy "workspaces_insert_update_delete"
   on public.workspaces for all to authenticated
   using (true)
   with check ((select auth.uid()) is not null);
 
+-- UPDATE adicional com restrição de admin (mais restritivo que o FOR ALL acima)
 create policy "workspaces_update_admin"
   on public.workspaces for update to authenticated
-  using (
-    id in (
-      select workspace_id from public.workspace_members
-      where  user_id = (select auth.uid())
-        and  role    = 'admin'
-        and  status  = 'active'
-    )
-  );
+  using (id in (select public.my_admin_workspace_ids()));
 
 -- RLS — workspace_members
 alter table public.workspace_members enable row level security;
@@ -144,25 +151,12 @@ create policy "workspace_members_select"
   on public.workspace_members for select to authenticated
   using (workspace_id in (select public.my_workspace_ids()));
 
--- Apenas admins gerenciam membros. FOR ALL required for INSERT to work in Supabase.
+-- Apenas admins gerenciam membros.
+-- Usa my_admin_workspace_ids() para evitar recursão infinita (self-referential policy).
 create policy "workspace_members_write"
   on public.workspace_members for all to authenticated
-  using (
-    workspace_id in (
-      select workspace_id from public.workspace_members wm
-      where  wm.user_id = (select auth.uid())
-        and  wm.role    = 'admin'
-        and  wm.status  = 'active'
-    )
-  )
-  with check (
-    workspace_id in (
-      select workspace_id from public.workspace_members wm
-      where  wm.user_id = (select auth.uid())
-        and  wm.role    = 'admin'
-        and  wm.status  = 'active'
-    )
-  );
+  using (workspace_id in (select public.my_admin_workspace_ids()))
+  with check (workspace_id in (select public.my_admin_workspace_ids()));
 
 -- Trigger: ao criar workspace, registra o usuário autenticado como admin ativo.
 -- Usa auth.uid() via security definer — funciona porque o trigger roda no
@@ -381,18 +375,23 @@ create trigger on_subscription_change
   for each row execute function public.sync_workspace_plan();
 
 -- RLS — apenas admins veem dados de cobrança; escrita por service_role
+-- Usa my_admin_workspace_ids() para evitar recursão sobre workspace_members
 alter table public.subscriptions enable row level security;
 
-create policy "subscriptions: leitura por admin do workspace"
-  on public.subscriptions for select
-  using (
-    workspace_id in (
-      select workspace_id from public.workspace_members
-      where  user_id = (select auth.uid())
-        and  role    = 'admin'
-        and  status  = 'active'
-    )
-  );
+create policy "subscriptions_select"
+  on public.subscriptions for select to authenticated
+  using (workspace_id in (select public.my_admin_workspace_ids()));
+
+
+-- ================================================================
+-- Índices adicionais de performance (skill: security-rls-performance)
+-- ================================================================
+
+-- workspace_members: índice composto para my_admin_workspace_ids()
+-- (user_id, role, status) com filtro parcial em status=active
+create index if not exists workspace_members_user_role_status_idx
+  on public.workspace_members (user_id, role, status)
+  where status = 'active';
 
 
 -- ================================================================
