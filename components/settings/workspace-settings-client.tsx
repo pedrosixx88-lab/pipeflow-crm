@@ -61,13 +61,24 @@ import {
   updateMemberRole,
   revokeInvite,
 } from "@/app/actions/workspace";
-import type { WorkspaceMemberRow, WorkspaceInviteRow, WorkspaceRow } from "@/types/database";
+import type { WorkspaceInviteRow, WorkspaceRow } from "@/types/database";
+
+export type MemberWithProfile = {
+  id: string;
+  workspace_id: string;
+  user_id: string | null;
+  role: "admin" | "member";
+  invited_email: string | null;
+  status: "active" | "pending";
+  created_at: string;
+  profiles: { full_name: string | null; avatar_url: string | null } | null;
+};
 
 const FREE_MEMBER_LIMIT = 2;
 
 interface WorkspaceSettingsClientProps {
   workspace: WorkspaceRow;
-  members: WorkspaceMemberRow[];
+  members: MemberWithProfile[];
   invites: WorkspaceInviteRow[];
   currentUserId: string;
   isAdmin: boolean;
@@ -250,19 +261,19 @@ function MembersCard({
   isAdmin,
   workspaceId,
 }: {
-  members: WorkspaceMemberRow[];
+  members: MemberWithProfile[];
   currentUserId: string;
   isAdmin: boolean;
   workspaceId: string;
 }) {
-  const [removeTarget, setRemoveTarget] = useState<WorkspaceMemberRow | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<MemberWithProfile | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleRemove() {
     if (!removeTarget) return;
     startTransition(async () => {
       const result = await removeMember({ memberId: removeTarget.id });
-      if (result?.error) {
+      if ("error" in result) {
         toast.error(result.error);
       } else {
         toast.success("Membro removido.");
@@ -274,7 +285,7 @@ function MembersCard({
   function handleRoleChange(memberId: string, role: "admin" | "member") {
     startTransition(async () => {
       const result = await updateMemberRole({ memberId, role });
-      if (result?.error) {
+      if ("error" in result) {
         toast.error(result.error);
       } else {
         toast.success("Papel atualizado.");
@@ -296,8 +307,13 @@ function MembersCard({
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
             {members.map((member) => {
               const isCurrentUser = member.user_id === currentUserId;
+              const profile = Array.isArray(member.profiles)
+                ? member.profiles[0]
+                : member.profiles;
               const displayName =
-                member.invited_email ?? member.user_id?.slice(0, 8) + "…";
+                profile?.full_name ||
+                member.invited_email ||
+                (member.user_id ? `Usuário ${member.user_id.slice(0, 6)}` : "Membro");
 
               return (
                 <li
@@ -405,7 +421,7 @@ function PendingInvitesCard({ invites }: { invites: WorkspaceInviteRow[] }) {
   function handleRevoke(inviteId: string) {
     startTransition(async () => {
       const result = await revokeInvite(inviteId);
-      if (result?.error) toast.error(result.error);
+      if ("error" in result) toast.error(result.error);
       else toast.success("Convite revogado.");
     });
   }
@@ -504,12 +520,12 @@ function InviteCard({
   function handleInvite() {
     startTransition(async () => {
       const result = await inviteMember({ email, role, workspaceId });
-      if (result?.error) {
+      if ("error" in result) {
         toast.error(result.error);
       } else {
-        if (result?.warning && result?.inviteUrl) {
+        if ("warning" in result && result.warning && result.inviteUrl) {
           toast.warning(result.warning);
-          setInviteUrl(result.inviteUrl as string);
+          setInviteUrl(result.inviteUrl);
         } else {
           toast.success(`Convite enviado para ${email}!`);
         }

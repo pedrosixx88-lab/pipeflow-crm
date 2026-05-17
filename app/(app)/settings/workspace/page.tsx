@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { asTyped } from "@/lib/supabase/typed-client";
-import { WorkspaceSettingsClient } from "@/components/settings/workspace-settings-client";
-import type { WorkspaceMemberRow, WorkspaceInviteRow, WorkspaceRow } from "@/types/database";
+import { WorkspaceSettingsClient, type MemberWithProfile } from "@/components/settings/workspace-settings-client";
+import type { WorkspaceInviteRow, WorkspaceRow } from "@/types/database";
 
 export const dynamic = "force-dynamic";
 
@@ -44,13 +44,13 @@ export default async function WorkspaceSettingsPage() {
 
     supabase
       .from("workspace_members")
-      .select("id, workspace_id, user_id, role, invited_email, status, created_at")
+      .select("id, workspace_id, user_id, role, invited_email, status, created_at, profiles(full_name, avatar_url)")
       .eq("workspace_id", activeWorkspaceId)
       .order("created_at", { ascending: true }),
 
     supabase
       .from("workspace_invites")
-      .select("id, workspace_id, invited_by, email, role, expires_at, accepted_at, created_at")
+      .select("id, workspace_id, invited_by, email, role, token, expires_at, accepted_at, created_at")
       .eq("workspace_id", activeWorkspaceId)
       .is("accepted_at", null)
       .gt("expires_at", new Date().toISOString())
@@ -67,8 +67,9 @@ export default async function WorkspaceSettingsPage() {
   ]);
 
   const workspace = workspaceRes.data as WorkspaceRow | null;
-  const members = (membersRes.data ?? []) as WorkspaceMemberRow[];
   const invites = (invitesRes.data ?? []) as WorkspaceInviteRow[];
+
+  const members = (membersRes.data ?? []) as unknown as MemberWithProfile[];
   const isAdmin = !!isAdminRes.data;
 
   if (!workspace) redirect("/dashboard");

@@ -60,7 +60,7 @@ async function assertAdmin(
   supabase: ReturnType<typeof asTyped>,
   workspaceId: string,
   userId: string,
-) {
+): Promise<{ error: string } | null> {
   const { data } = await supabase
     .from("workspace_members")
     .select("id")
@@ -70,7 +70,8 @@ async function assertAdmin(
     .eq("status", "active")
     .single();
 
-  if (!data) throw new Error("Apenas administradores podem realizar esta ação.");
+  if (!data) return { error: "Apenas administradores podem realizar esta ação." };
+  return null;
 }
 
 // ── Schemas ──────────────────────────────────────────────────────
@@ -107,7 +108,8 @@ export async function updateWorkspace(formData: unknown) {
   const workspaceId = await getActiveWorkspaceId(supabase, user.id);
   if (!workspaceId) return { error: "Workspace não encontrado." };
 
-  await assertAdmin(supabase, workspaceId, user.id);
+  const adminErr = await assertAdmin(supabase, workspaceId, user.id);
+  if (adminErr) return adminErr;
 
   const { error } = await supabase
     .from("workspaces")
@@ -130,7 +132,8 @@ export async function inviteMember(formData: unknown) {
 
   const { email, role, workspaceId } = parsed.data;
 
-  await assertAdmin(supabase, workspaceId, user.id);
+  const adminErr = await assertAdmin(supabase, workspaceId, user.id);
+  if (adminErr) return adminErr;
 
   // Busca workspace para checar plano e nome
   const { data: workspace } = await supabase
@@ -171,15 +174,7 @@ export async function inviteMember(formData: unknown) {
     return { error: "Já existe um convite pendente para este e-mail." };
   }
 
-  // Verifica se o e-mail já é membro ativo
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("id", user.id)
-    .single();
-
-  // Busca o profile do convidado pelo e-mail via auth (precisa de admin)
-  // Usamos uma abordagem simples: verificar workspace_members com invited_email
+  // Verifica se o e-mail já é membro ativo via invited_email (sem acesso a auth.users)
   const { data: alreadyMember } = await supabase
     .from("workspace_members")
     .select("id")
@@ -317,7 +312,8 @@ export async function removeMember(formData: unknown) {
 
   if (!member) return { error: "Membro não encontrado." };
 
-  await assertAdmin(supabase, member.workspace_id, user.id);
+  const adminErr = await assertAdmin(supabase, member.workspace_id, user.id);
+  if (adminErr) return adminErr;
 
   // Impede remoção do próprio admin
   if (member.user_id === user.id) {
@@ -351,7 +347,8 @@ export async function updateMemberRole(formData: unknown) {
 
   if (!member) return { error: "Membro não encontrado." };
 
-  await assertAdmin(supabase, member.workspace_id, user.id);
+  const adminErrRole = await assertAdmin(supabase, member.workspace_id, user.id);
+  if (adminErrRole) return adminErrRole;
 
   // Impede rebaixamento do próprio admin
   if (member.user_id === user.id) {
@@ -381,7 +378,8 @@ export async function revokeInvite(inviteId: string) {
 
   if (!invite) return { error: "Convite não encontrado." };
 
-  await assertAdmin(supabase, invite.workspace_id, user.id);
+  const adminErrRevoke = await assertAdmin(supabase, invite.workspace_id, user.id);
+  if (adminErrRevoke) return adminErrRevoke;
 
   const { error } = await supabase
     .from("workspace_invites")
