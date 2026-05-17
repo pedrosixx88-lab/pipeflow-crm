@@ -44,8 +44,9 @@ export default async function WorkspaceSettingsPage() {
 
     supabase
       .from("workspace_members")
-      .select("id, workspace_id, user_id, role, invited_email, status, created_at, profiles(full_name, avatar_url)")
+      .select("id, workspace_id, user_id, role, invited_email, status, created_at")
       .eq("workspace_id", activeWorkspaceId)
+      .eq("status", "active")
       .order("created_at", { ascending: true }),
 
     supabase
@@ -68,9 +69,28 @@ export default async function WorkspaceSettingsPage() {
 
   const workspace = workspaceRes.data as WorkspaceRow | null;
   const invites = (invitesRes.data ?? []) as WorkspaceInviteRow[];
-
-  const members = (membersRes.data ?? []) as unknown as MemberWithProfile[];
+  const rawMembers = membersRes.data ?? [];
   const isAdmin = !!isAdminRes.data;
+
+  // Busca profiles dos membros que têm user_id (evita join PostgREST com FK não declarada)
+  const userIds = rawMembers.map((m) => m.user_id).filter(Boolean) as string[];
+  const profilesMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
+  if (userIds.length > 0) {
+    const { data: profilesData } = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url")
+      .in("id", userIds);
+    for (const p of profilesData ?? []) {
+      profilesMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+    }
+  }
+
+  const members: MemberWithProfile[] = rawMembers.map((m) => ({
+    ...m,
+    role: m.role as "admin" | "member",
+    status: m.status as "active" | "pending",
+    profiles: m.user_id ? (profilesMap[m.user_id] ?? null) : null,
+  }));
 
   if (!workspace) redirect("/dashboard");
 
