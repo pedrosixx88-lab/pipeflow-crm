@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 interface KpiCardProps {
   title: string;
   value: string;
-  change: number;
-  changeLabel: string;
+  change?: number;
+  changeLabel?: string;
   icon: LucideIcon;
   iconColor: string;
   iconBg: string;
@@ -21,7 +21,7 @@ export function KpiCard({
   iconColor,
   iconBg,
 }: KpiCardProps) {
-  const isPositive = change >= 0;
+  const isPositive = (change ?? 0) >= 0;
 
   return (
     <div className="rounded-xl border border-border bg-card p-5 flex flex-col gap-3">
@@ -34,23 +34,25 @@ export function KpiCard({
 
       <div>
         <p className="text-2xl font-bold tracking-tight text-foreground">{value}</p>
-        <div className="mt-1 flex items-center gap-1.5">
-          {isPositive ? (
-            <TrendingUp className="size-3.5 text-emerald-500" />
-          ) : (
-            <TrendingDown className="size-3.5 text-red-500" />
-          )}
-          <span
-            className={cn(
-              "text-xs font-medium",
-              isPositive ? "text-emerald-500" : "text-red-500"
+        {change !== undefined && changeLabel && (
+          <div className="mt-1 flex items-center gap-1.5">
+            {isPositive ? (
+              <TrendingUp className="size-3.5 text-emerald-500" />
+            ) : (
+              <TrendingDown className="size-3.5 text-red-500" />
             )}
-          >
-            {isPositive ? "+" : ""}
-            {change}%
-          </span>
-          <span className="text-xs text-muted-foreground">{changeLabel}</span>
-        </div>
+            <span
+              className={cn(
+                "text-xs font-medium",
+                isPositive ? "text-emerald-500" : "text-red-500"
+              )}
+            >
+              {isPositive ? "+" : ""}
+              {change}%
+            </span>
+            <span className="text-xs text-muted-foreground">{changeLabel}</span>
+          </div>
+        )}
       </div>
     </div>
   );
