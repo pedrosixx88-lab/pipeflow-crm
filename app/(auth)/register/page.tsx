@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthLogo } from "@/components/shared/auth-logo";
+import { createClient } from "@/lib/supabase/client";
 
 const registerSchema = z
   .object({
@@ -38,10 +39,26 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
-  async function onSubmit(_data: RegisterFormData) {
+  async function onSubmit(data: RegisterFormData) {
     setServerError(null);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    // Navegação fake — M4 integra com Supabase Auth
+    const supabase = createClient();
+    const { error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: { full_name: data.name },
+      },
+    });
+
+    if (error) {
+      if (error.message.includes("already registered") || error.message.includes("already been registered")) {
+        setServerError("Este e-mail já está cadastrado. Tente fazer login.");
+      } else {
+        setServerError("Erro ao criar conta. Tente novamente.");
+      }
+      return;
+    }
+
     router.push("/onboarding");
   }
 

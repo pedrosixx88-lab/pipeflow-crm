@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthLogo } from "@/components/shared/auth-logo";
+import { createClient } from "@/lib/supabase/client";
 
 const forgotSchema = z.object({
   email: z.string().min(1, "E-mail obrigatório").email("E-mail inválido"),
@@ -30,7 +31,11 @@ export default function ForgotPasswordPage() {
   });
 
   async function onSubmit(data: ForgotFormData) {
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    const supabase = createClient();
+    await supabase.auth.resetPasswordForEmail(data.email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+    });
+    // Sempre mostra sucesso para não revelar se o e-mail existe
     setSubmittedEmail(data.email);
     setSent(true);
   }

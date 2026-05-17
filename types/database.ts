@@ -57,7 +57,6 @@ export interface Database {
           name:                   string;
           slug:                   string;
           plan:                   WorkspacePlan;
-          owner_id:               string | null;
           stripe_customer_id:     string | null;
           stripe_subscription_id: string | null;
           created_at:             string;
@@ -68,7 +67,6 @@ export interface Database {
           name:                   string;
           slug:                   string;
           plan?:                  WorkspacePlan;
-          owner_id?:              string | null;
           stripe_customer_id?:    string | null;
           stripe_subscription_id?: string | null;
           created_at?:            string;
@@ -79,7 +77,6 @@ export interface Database {
           name?:                  string;
           slug?:                  string;
           plan?:                  WorkspacePlan;
-          owner_id?:              string | null;
           stripe_customer_id?:    string | null;
           stripe_subscription_id?: string | null;
           updated_at?:            string;

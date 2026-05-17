@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Menu, Search, Bell } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { MobileSidebar } from "@/components/shared/sidebar";
+import { MobileSidebar, type SidebarUser, type SidebarWorkspace } from "@/components/shared/sidebar";
 
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -23,7 +23,12 @@ function getPageTitle(pathname: string): string {
   return "PipeFlow";
 }
 
-export function Header() {
+interface HeaderProps {
+  user: SidebarUser;
+  workspaces: SidebarWorkspace[];
+}
+
+export function Header({ user, workspaces }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const title = getPageTitle(pathname);
@@ -33,6 +38,8 @@ export function Header() {
       <MobileSidebar
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
+        user={user}
+        workspaces={workspaces}
       />
 
       <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md">

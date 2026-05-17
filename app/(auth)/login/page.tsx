@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthLogo } from "@/components/shared/auth-logo";
+import { createClient } from "@/lib/supabase/client";
 
 const loginSchema = z.object({
   email: z.string().min(1, "E-mail obrigatório").email("E-mail inválido"),
@@ -31,11 +32,24 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  async function onSubmit(_data: LoginFormData) {
+  async function onSubmit(data: LoginFormData) {
     setServerError(null);
-    // Simula latência de rede
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    // Navegação fake — será substituída pelo Supabase Auth no M4
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
+
+    if (error) {
+      if (error.message.includes("Email not confirmed")) {
+        setServerError("Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.");
+      } else {
+        setServerError("E-mail ou senha inválidos.");
+      }
+      return;
+    }
+
+    router.refresh();
     router.push("/dashboard");
   }
 

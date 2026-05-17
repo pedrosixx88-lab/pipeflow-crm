@@ -2,14 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
   Kanban,
   Settings,
   ChevronDown,
-  LogOut,
   Check,
   Plus,
   Zap,
@@ -19,14 +18,22 @@ import {
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import {
-  MOCK_WORKSPACES,
-  MOCK_ACTIVE_WORKSPACE,
-  MOCK_USER,
-  MOCK_USER_EMAIL,
-} from "@/lib/mock-data";
-import type { Workspace } from "@/types";
+import { LogoutButton } from "@/components/shared/logout-button";
+import type { WorkspacePlan } from "@/types";
+
+export interface SidebarWorkspace {
+  id: string;
+  name: string;
+  slug: string;
+  plan: WorkspacePlan;
+}
+
+export interface SidebarUser {
+  id: string;
+  email: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+}
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -78,10 +85,13 @@ function PipeFlowLogo() {
   );
 }
 
-function WorkspaceSelector() {
+function WorkspaceSelector({ workspaces }: { workspaces: SidebarWorkspace[] }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState<Workspace>(MOCK_ACTIVE_WORKSPACE);
+  const [activeId, setActiveId] = useState<string>(workspaces[0]?.id ?? "");
   const ref = useRef<HTMLDivElement>(null);
+
+  const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -93,11 +103,11 @@ function WorkspaceSelector() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
+  if (!active) return null;
+
   const initials = active.name.slice(0, 2).toUpperCase();
 
   return (
-    // Bug 2 fix: sem overflow-hidden no wrapper — o dropdown position:absolute
-    // fica dentro deste div.relative e não pode ser clipado por ele.
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
@@ -112,9 +122,6 @@ function WorkspaceSelector() {
           </p>
         </div>
         <div className="flex items-center gap-1.5">
-          {/* Bug 4 fix: span simples em vez de Badge do Base UI.
-              O Badge tem rounded-4xl na base que twMerge não reconhece
-              como conflito com rounded, resultando em forma pill. */}
           {active.plan === "pro" && (
             <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold bg-blue-500/15 text-blue-400">
               Pro
@@ -134,12 +141,13 @@ function WorkspaceSelector() {
           <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
             Workspaces
           </p>
-          {MOCK_WORKSPACES.map((ws) => (
+          {workspaces.map((ws) => (
             <button
               key={ws.id}
               onClick={() => {
-                setActive(ws);
+                setActiveId(ws.id);
                 setOpen(false);
+                router.refresh();
               }}
               className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-accent"
             >
@@ -164,7 +172,13 @@ function WorkspaceSelector() {
             </button>
           ))}
           <Separator className="my-1 opacity-50" />
-          <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+          <button
+            onClick={() => {
+              setOpen(false);
+              router.push("/onboarding");
+            }}
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
             <Plus className="size-3.5" />
             Novo workspace
           </button>
@@ -216,14 +230,14 @@ function NavLink({
 }
 
 interface SidebarContentProps {
+  user: SidebarUser;
+  workspaces: SidebarWorkspace[];
   onNavClick?: () => void;
 }
 
-function SidebarContent({ onNavClick }: SidebarContentProps) {
-  // Bug 1 fix: flex-1 + min-h-0 em vez de h-full.
-  // h-full só funciona se o pai tiver altura explícita definida,
-  // o que não é garantido quando o pai é um flex-child sem h-full próprio.
-  // flex-1 + min-h-0 funciona corretamente em qualquer contexto flex.
+function SidebarContent({ user, workspaces, onNavClick }: SidebarContentProps) {
+  const activeWorkspace = workspaces[0];
+
   return (
     <div className="flex flex-1 flex-col min-h-0">
       {/* Logo */}
@@ -238,7 +252,11 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
         <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
           Workspace
         </p>
-        <WorkspaceSelector />
+        {workspaces.length > 0 ? (
+          <WorkspaceSelector workspaces={workspaces} />
+        ) : (
+          <p className="px-2 text-xs text-muted-foreground">Nenhum workspace</p>
+        )}
       </div>
 
       <Separator className="opacity-40" />
@@ -258,30 +276,26 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
       <Separator className="opacity-40" />
 
       {/* Upgrade banner */}
-      <div className="shrink-0 px-3 py-3">
-        <div className="rounded-lg border border-blue-500/15 bg-blue-500/5 p-3">
-          <div className="flex items-start gap-2">
-            <Zap className="mt-0.5 size-3.5 shrink-0 text-blue-400" />
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium text-sidebar-foreground">
-                Plano Free
-              </p>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                32 / 50 leads usados
-              </p>
-              <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-border">
-                <div
-                  className="h-full rounded-full bg-blue-500"
-                  style={{ width: "64%" }}
-                />
+      {activeWorkspace?.plan === "free" && (
+        <div className="shrink-0 px-3 py-3">
+          <div className="rounded-lg border border-blue-500/15 bg-blue-500/5 p-3">
+            <div className="flex items-start gap-2">
+              <Zap className="mt-0.5 size-3.5 shrink-0 text-blue-400" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-sidebar-foreground">
+                  Plano Free
+                </p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">
+                  Upgrade para leads ilimitados
+                </p>
+                <button className="mt-2 text-[10px] font-medium text-blue-400 transition-colors hover:text-blue-300">
+                  Upgrade para Pro →
+                </button>
               </div>
-              <button className="mt-2 text-[10px] font-medium text-blue-400 transition-colors hover:text-blue-300">
-                Upgrade para Pro →
-              </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       <Separator className="opacity-40" />
 
@@ -289,40 +303,35 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
       <div className="shrink-0 px-3 py-3">
         <div className="group flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-sidebar-accent">
           <Avatar size="sm">
-            <AvatarImage src={MOCK_USER.avatarUrl} />
+            <AvatarImage src={user.avatarUrl ?? undefined} />
             <AvatarFallback className="bg-blue-600/20 text-blue-400 text-[10px]">
-              {getInitials(MOCK_USER.fullName)}
+              {getInitials(user.fullName)}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-medium text-sidebar-foreground">
-              {MOCK_USER.fullName}
+              {user.fullName ?? "Usuário"}
             </p>
             <p className="truncate text-[10px] text-muted-foreground">
-              {MOCK_USER_EMAIL}
+              {user.email}
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground"
-            title="Sair"
-          >
-            <LogOut className="size-3.5" />
-          </Button>
+          <LogoutButton />
         </div>
       </div>
     </div>
   );
 }
 
-export function Sidebar() {
-  // Bug 2 fix: sem overflow-hidden no wrapper — o dropdown do workspace
-  // selector (position:absolute) não pode ser clipado por overflow:hidden
-  // em nenhum ancestral. O aside já é flex column via flex-col.
+interface SidebarProps {
+  user: SidebarUser;
+  workspaces: SidebarWorkspace[];
+}
+
+export function Sidebar({ user, workspaces }: SidebarProps) {
   return (
     <aside data-sidebar className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
-      <SidebarContent />
+      <SidebarContent user={user} workspaces={workspaces} />
     </aside>
   );
 }
@@ -330,9 +339,13 @@ export function Sidebar() {
 export function MobileSidebar({
   open,
   onClose,
+  user,
+  workspaces,
 }: {
   open: boolean;
   onClose: () => void;
+  user: SidebarUser;
+  workspaces: SidebarWorkspace[];
 }) {
   useEffect(() => {
     if (open) {
@@ -347,7 +360,6 @@ export function MobileSidebar({
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className={cn(
           "fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-200 lg:hidden",
@@ -357,9 +369,6 @@ export function MobileSidebar({
         aria-hidden="true"
       />
 
-      {/* Bug 3 fix: flex flex-col no drawer para que SidebarContent (flex-1)
-          funcione corretamente. Sem flex, flex-1 no filho não tem efeito
-          e o conteúdo não preenche o drawer corretamente. */}
       <div
         data-sidebar
         className={cn(
@@ -374,7 +383,7 @@ export function MobileSidebar({
         >
           <X className="size-4" />
         </button>
-        <SidebarContent onNavClick={onClose} />
+        <SidebarContent user={user} workspaces={workspaces} onNavClick={onClose} />
       </div>
     </>
   );
