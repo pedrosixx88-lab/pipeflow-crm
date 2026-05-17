@@ -17,9 +17,9 @@ create table if not exists public.workspace_invites (
   created_at    timestamptz not null default now()
 );
 
-create index workspace_invites_workspace_id_idx on public.workspace_invites (workspace_id);
-create index workspace_invites_token_idx        on public.workspace_invites (token);
-create index workspace_invites_email_idx        on public.workspace_invites (email);
+create index if not exists workspace_invites_workspace_id_idx on public.workspace_invites (workspace_id);
+create index if not exists workspace_invites_token_idx        on public.workspace_invites (token);
+create index if not exists workspace_invites_email_idx        on public.workspace_invites (email);
 
 -- RLS
 alter table public.workspace_invites enable row level security;
