@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
+
+function createAdminClient() {
+  return createServiceClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
 
 // Stripe precisa do raw body para verificar a assinatura — não usar body parser
 export const runtime = "nodejs";
@@ -24,8 +32,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Assinatura inválida." }, { status: 400 });
   }
 
-  // Webhook é chamado pelo Stripe sem sessão de usuário — usa service_role via createClient
-  const supabase = await createClient();
+  // Webhook é chamado pelo Stripe sem sessão de usuário — usa service_role para bypassar RLS
+  const supabase = createAdminClient();
 
   try {
     // 4. Tratar os 3 eventos
@@ -118,7 +126,7 @@ export async function POST(req: NextRequest) {
 }
 
 async function upsertSubscription(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createAdminClient>,
   workspaceId: string,
   sub: Stripe.Subscription,
 ) {
