@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { asTyped } from "@/lib/supabase/typed-client";
+import { getActiveWorkspaceId } from "@/lib/supabase/get-active-workspace";
 
 const activitySchema = z.object({
   leadId:      z.string().uuid(),
@@ -22,19 +23,13 @@ export async function createActivity(formData: unknown) {
   const parsed = activitySchema.safeParse(formData);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { data: ws } = await supabase
-    .from("workspaces")
-    .select("id")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .single();
-
-  if (!ws) return { error: "Workspace não encontrado" };
+  const workspaceId = await getActiveWorkspaceId(supabase, user.id);
+  if (!workspaceId) return { error: "Workspace não encontrado" };
 
   const { data, error } = await supabase
     .from("activities")
     .insert({
-      workspace_id: ws.id,
+      workspace_id: workspaceId,
       lead_id:      parsed.data.leadId,
       author_id:    user.id,
       type:         parsed.data.type,

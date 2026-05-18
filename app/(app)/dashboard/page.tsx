@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { DollarSign, Kanban, PercentCircle, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { asTyped } from "@/lib/supabase/typed-client";
+import { getActiveWorkspaceId } from "@/lib/supabase/get-active-workspace";
 import { getDashboardMetrics, getUpcomingDeals, type UpcomingDealRow } from "@/lib/supabase/queries/dashboard";
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { FunnelChart } from "@/components/dashboard/funnel-chart";
@@ -21,14 +22,9 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: ws } = await supabase
-    .from("workspaces")
-    .select("id")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .single();
-
-  if (!ws) redirect("/onboarding");
+  const workspaceId = await getActiveWorkspaceId(supabase, user.id);
+  if (!workspaceId) redirect("/onboarding");
+  const ws = { id: workspaceId };
 
   const [metrics, upcomingRows] = await Promise.all([
     getDashboardMetrics(supabase, ws.id),

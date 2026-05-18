@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { asTyped } from "@/lib/supabase/typed-client";
+import { getActiveWorkspaceId } from "@/lib/supabase/get-active-workspace";
 import { queryLeadCount } from "@/lib/supabase/queries/leads";
 
 const FREE_LEAD_LIMIT = 50;
@@ -26,16 +27,6 @@ const leadSchema = z.object({
   notes: z.string().optional(),
 });
 
-async function getActiveWorkspace(supabase: ReturnType<typeof asTyped>) {
-  const { data } = await supabase
-    .from("workspaces")
-    .select("id, plan")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .single();
-  return data;
-}
-
 export async function createLead(formData: unknown) {
   const supabase = asTyped(await createClient());
 
@@ -47,12 +38,19 @@ export async function createLead(formData: unknown) {
     return { error: parsed.error.issues[0].message };
   }
 
-  const ws = await getActiveWorkspace(supabase);
+  const workspaceId = await getActiveWorkspaceId(supabase, user.id);
+  if (!workspaceId) return { error: "Workspace não encontrado" };
+
+  const { data: ws } = await supabase
+    .from("workspaces")
+    .select("plan")
+    .eq("id", workspaceId)
+    .single();
   if (!ws) return { error: "Workspace não encontrado" };
 
   // Guard: plano Free tem limite de 50 leads
   if (ws.plan === "free") {
-    const count = await queryLeadCount(supabase, ws.id);
+    const count = await queryLeadCount(supabase, workspaceId);
     if (count >= FREE_LEAD_LIMIT) {
       return { error: `Limite de ${FREE_LEAD_LIMIT} leads atingido. Faça upgrade para o plano Pro.` };
     }
@@ -61,7 +59,7 @@ export async function createLead(formData: unknown) {
   const { data, error } = await supabase
     .from("leads")
     .insert({
-      workspace_id: ws.id,
+      workspace_id: workspaceId,
       owner_id: user.id,
       name: parsed.data.name,
       email: parsed.data.email,

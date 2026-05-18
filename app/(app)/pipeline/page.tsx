@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { asTyped } from "@/lib/supabase/typed-client";
+import { getActiveWorkspaceId } from "@/lib/supabase/get-active-workspace";
 import { queryDealsByWorkspace } from "@/lib/supabase/queries/deals";
 import { PipelineClient } from "@/components/pipeline/pipeline-client";
 import type { Deal, DealStage, Lead, LeadStatus } from "@/types";
@@ -44,14 +45,9 @@ export default async function PipelinePage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: ws } = await supabase
-    .from("workspaces")
-    .select("id")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .single();
-
-  if (!ws) redirect("/onboarding");
+  const workspaceId = await getActiveWorkspaceId(supabase, user.id);
+  if (!workspaceId) redirect("/onboarding");
+  const ws = { id: workspaceId };
 
   const [dealsResult, leadsResult] = await Promise.all([
     queryDealsByWorkspace(supabase, ws.id),

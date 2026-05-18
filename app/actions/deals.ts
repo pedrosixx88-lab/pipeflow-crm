@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { asTyped } from "@/lib/supabase/typed-client";
+import { getActiveWorkspaceId } from "@/lib/supabase/get-active-workspace";
 
 const dealSchema = z.object({
   title: z.string().min(2, "Título precisa ter ao menos 2 caracteres"),
@@ -21,16 +22,6 @@ const dealSchema = z.object({
   deadline: z.string().optional(),
 });
 
-async function getWorkspaceId(supabase: ReturnType<typeof asTyped>) {
-  const { data } = await supabase
-    .from("workspaces")
-    .select("id")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .single();
-  return data?.id ?? null;
-}
-
 export async function createDeal(formData: unknown) {
   const supabase = asTyped(await createClient());
 
@@ -42,7 +33,7 @@ export async function createDeal(formData: unknown) {
     return { error: parsed.error.issues[0].message };
   }
 
-  const workspaceId = await getWorkspaceId(supabase);
+  const workspaceId = await getActiveWorkspaceId(supabase, user.id);
   if (!workspaceId) return { error: "Workspace não encontrado" };
 
   // Posição = último da coluna
