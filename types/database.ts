@@ -334,7 +334,7 @@ export interface Database {
         Returns: string[];
       };
       accept_workspace_invite: {
-        Args: { p_token: string; p_user_id: string };
+        Args: { p_token: string };
         Returns: Json;
       };
     };

@@ -89,6 +89,10 @@ export async function updateLead(id: string, formData: unknown) {
     return { error: parsed.error.issues[0].message };
   }
 
+  const workspaceId = await getActiveWorkspaceId(supabase, user.id);
+  const { data: existing } = await supabase.from("leads").select("workspace_id").eq("id", id).single();
+  if (!existing || existing.workspace_id !== workspaceId) return { error: "Não autorizado." };
+
   const { data, error } = await supabase
     .from("leads")
     .update({
@@ -104,7 +108,10 @@ export async function updateLead(id: string, formData: unknown) {
     .select()
     .single();
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[updateLead]", error);
+    return { error: "Falha ao atualizar o lead. Tente novamente." };
+  }
 
   revalidatePath("/leads");
   revalidatePath(`/leads/${id}`);
@@ -117,12 +124,19 @@ export async function archiveLead(id: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const workspaceId = await getActiveWorkspaceId(supabase, user.id);
+  const { data: existing } = await supabase.from("leads").select("workspace_id").eq("id", id).single();
+  if (!existing || existing.workspace_id !== workspaceId) return { error: "Não autorizado." };
+
   const { error } = await supabase
     .from("leads")
     .update({ status: "arquivado" })
     .eq("id", id);
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[archiveLead]", error);
+    return { error: "Falha ao arquivar o lead. Tente novamente." };
+  }
 
   revalidatePath("/leads");
   return { success: true };
@@ -134,9 +148,16 @@ export async function deleteLead(id: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const workspaceId = await getActiveWorkspaceId(supabase, user.id);
+  const { data: existing } = await supabase.from("leads").select("workspace_id").eq("id", id).single();
+  if (!existing || existing.workspace_id !== workspaceId) return { error: "Não autorizado." };
+
   const { error } = await supabase.from("leads").delete().eq("id", id);
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[deleteLead]", error);
+    return { error: "Falha ao excluir o lead. Tente novamente." };
+  }
 
   revalidatePath("/leads");
   return { success: true };

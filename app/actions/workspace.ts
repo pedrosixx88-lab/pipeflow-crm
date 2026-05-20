@@ -284,7 +284,6 @@ export async function acceptInvite(token: string) {
 
   const { data: result, error } = await supabase.rpc("accept_workspace_invite", {
     p_token: token,
-    p_user_id: user.id,
   });
 
   if (error) {

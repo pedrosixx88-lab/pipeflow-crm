@@ -26,6 +26,15 @@ export async function createActivity(formData: unknown) {
   const workspaceId = await getActiveWorkspaceId(supabase, user.id);
   if (!workspaceId) return { error: "Workspace não encontrado" };
 
+  // Verifica que o lead pertence ao workspace ativo
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("id")
+    .eq("id", parsed.data.leadId)
+    .eq("workspace_id", workspaceId)
+    .single();
+  if (!lead) return { error: "Lead não encontrado." };
+
   const { data, error } = await supabase
     .from("activities")
     .insert({
@@ -39,7 +48,10 @@ export async function createActivity(formData: unknown) {
     .select()
     .single();
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[createActivity]", error);
+    return { error: "Falha ao registrar a atividade. Tente novamente." };
+  }
 
   revalidatePath(`/leads/${parsed.data.leadId}`);
   return { data };
