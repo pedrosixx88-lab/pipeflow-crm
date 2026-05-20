@@ -79,7 +79,7 @@ export async function createCheckoutSession(): Promise<{ error: string } | never
     .from("workspaces")
     .select("id, name, plan, stripe_customer_id")
     .eq("id", workspaceId)
-    .single();
+    .maybeSingle();
 
   if (!workspace) return { error: "Workspace não encontrado." };
   if (workspace.plan === "pro") return { error: "Este workspace já é Pro." };
@@ -133,7 +133,7 @@ export async function createPortalSession(): Promise<{ error: string } | never> 
     .from("workspaces")
     .select("stripe_customer_id")
     .eq("id", workspaceId)
-    .single();
+    .maybeSingle();
 
   if (!workspace?.stripe_customer_id) {
     return { error: "Nenhuma assinatura encontrada para este workspace." };
